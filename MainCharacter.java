@@ -14,7 +14,9 @@ public class MainCharacter {
     }
 
     public void move() {
-        x = x + dx;
+        if (x + dx >= 35 && x + dx <= 680) { //make sure it doesn't run off page
+            x = x + dx;
+        }
     }
 
     public int getX() {
