@@ -10,15 +10,17 @@ public class Game {
 	private JRadioButtonMenuItem authorModeMenuItem;
 	private JRadioButtonMenuItem playModeMenuItem;
 	private ButtonGroup modeButtonGroup;
-	private JLabel tempLabel; //label to show play/author mode
+
+	private GameBoard gameBoard;
+	//private JLabel tempLabel; //label to show play/author mode
 
 	public Game() {
 		frame = new JFrame();
-		mode = false;
+		mode = true;
 		menuBar = new JMenuBar();
 		modeMenu = new JMenu("Mode");
-		authorModeMenuItem = new JRadioButtonMenuItem("Author", true);
-		playModeMenuItem = new JRadioButtonMenuItem("Play", false);
+		authorModeMenuItem = new JRadioButtonMenuItem("Author", false);
+		playModeMenuItem = new JRadioButtonMenuItem("Play", true);
 		modeButtonGroup = new ButtonGroup();
 
 		authorModeMenuItem.addActionListener(new ActionListener() {
@@ -38,12 +40,14 @@ public class Game {
 		modeMenu.add(playModeMenuItem);
 		menuBar.add(modeMenu);
 
-		tempLabel = new JLabel("Author Mode");
+		gameBoard = new GameBoard();
+		gameBoard.setSize(700, 250);
+		gameBoard.setPreferredSize(new Dimension(700, 250));
 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setMinimumSize(new Dimension(700, 250)); 
 		frame.setJMenuBar(menuBar);
-		frame.add(tempLabel);
+		frame.add(gameBoard);
 		frame.pack();
 		frame.setVisible(true);
 	}
@@ -59,11 +63,11 @@ public class Game {
 	private void toggleMode() {
 		if (mode) {
 			mode = false;
-			tempLabel.setText("Author Mode");
+			//toggle from play mode to author mode
 		}
 		else {
 			mode = true;
-			tempLabel.setText("Play Mode");
+			//toggle from author mode to play mode
 		}
 		frame.repaint();
 	}
