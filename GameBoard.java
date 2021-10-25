@@ -5,9 +5,13 @@ import java.awt.event.*;
 public class GameBoard extends JPanel implements ActionListener{
     MainCharacter character;
     Timer time;
+    boolean mode;
+    dollar.DollarRecognizer dr;
 
-	public GameBoard() {
+	public GameBoard(boolean mode) {
         character = new MainCharacter();
+        dr = new dollar.DollarRecognizer(); // get result of the recognizer as Result r = dr.recognize(current stroke);
+        this.mode = mode;
         this.addKeyListener(new BoardActionListener());
         setFocusable(true); //let's you move left/right when you press keys
         time = new Timer(5, this); //update image every 5 milliseconds
@@ -29,6 +33,10 @@ public class GameBoard extends JPanel implements ActionListener{
         y = y-(radius/2);
         g2d.setColor(Color.BLUE);
         g2d.fillOval(x, y, radius, radius);
+    }
+
+    public void setMode(boolean m) {
+	    mode = m;
     }
 
     private class BoardActionListener extends KeyAdapter {

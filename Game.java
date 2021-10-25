@@ -16,11 +16,11 @@ public class Game {
 
 	public Game() {
 		frame = new JFrame();
-		mode = true;
+		mode = false;
 		menuBar = new JMenuBar();
 		modeMenu = new JMenu("Mode");
-		authorModeMenuItem = new JRadioButtonMenuItem("Author", false);
-		playModeMenuItem = new JRadioButtonMenuItem("Play", true);
+		authorModeMenuItem = new JRadioButtonMenuItem("Author", true);
+		playModeMenuItem = new JRadioButtonMenuItem("Play", false);
 		modeButtonGroup = new ButtonGroup();
 
 		authorModeMenuItem.addActionListener(new ActionListener() {
@@ -40,7 +40,7 @@ public class Game {
 		modeMenu.add(playModeMenuItem);
 		menuBar.add(modeMenu);
 
-		gameBoard = new GameBoard();
+		gameBoard = new GameBoard(mode);
 		gameBoard.setSize(700, 250);
 		gameBoard.setPreferredSize(new Dimension(700, 250));
 
@@ -64,15 +64,13 @@ public class Game {
 		if (mode) {
 			mode = false;
 			//toggle from play mode to author mode
+			gameBoard.setMode(mode);
 		}
 		else {
 			mode = true;
 			//toggle from author mode to play mode
+			gameBoard.setMode(mode);
 		}
 		frame.repaint();
 	}
 }
-
-//QUESTIONS
-//Should we initialize in author mode or play mode? or should we have an intro screen that lets them choose?
-//What do you think the defualt/minimum size should be for the screen? 
