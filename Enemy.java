@@ -12,4 +12,8 @@ public class Enemy {
     public void move(int x, int y) {
         boundingBox.setLocation(x, y);
     }
+
+    public Rectangle getBoundingBox() {
+        return boundingBox;
+    }
 }

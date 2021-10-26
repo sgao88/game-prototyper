@@ -47,9 +47,38 @@ public class GameBoard extends JPanel implements ActionListener{
         g2d.setColor(new Color(0, 100, 0));
         g2d.fillOval(x, y, radius, radius);
 
-        //draw the enemies
-        //draw the platforms
-        //draw the effects
+        //draw the enemies, platforms, and effects (doesn't matter what mode we're in)
+        g2d.setColor(Color.red);
+        for (int i = 0; i < enemies.size(); i++) {
+            Rectangle b = enemies.get(i).getBoundingBox();
+            if (b.getWidth() >= b.getHeight()) {
+                g2d.fillOval((int) b.getX(), (int) b.getY(), (int) b.getWidth(), (int) b.getWidth());
+            }
+            else {
+                g2d.fillOval((int) b.getX(), (int) b.getY(), (int) b.getHeight(), (int) b.getHeight());
+            }
+        }
+
+        g2d.setColor(new Color(150, 75, 0)); //brown
+        for (int i = 0; i < platforms.size(); i++) {
+            Rectangle b = platforms.get(i).getBoundingBox();
+            g2d.fillRect((int) b.getX(), (int) b.getY(), (int) b.getWidth(), (int) b.getHeight());
+        }
+
+        for (int i = 0; i < effects.size(); i++) {
+            if (effects.get(i).getEffect()) {
+                g2d.setColor(Color.yellow);
+            }
+            else {
+                g2d.setColor(Color.black);
+            }
+            Rectangle b = effects.get(i).getBoundingBox();
+            //bottom left, bottom right, top midpoint
+            int[] xPoints = new int[] {(int)b.getX(), (int)(b.getX() + b.getWidth()), (int)(b.getX() + (b.getWidth()/2.0))};
+            int[] yPoints = new int[] {(int)(b.getY() + b.getHeight()), (int)(b.getY() + b.getHeight()), (int)b.getY()};
+            g2d.fillPolygon(xPoints, yPoints, 3);
+        }
+        g2d.setColor(Color.black);
 
         //keep at end of the method so stroke is drawn on top of the other objects
         g2d.setColor(Color.black);
@@ -84,7 +113,7 @@ public class GameBoard extends JPanel implements ActionListener{
         }
 
         public void mouseReleased(MouseEvent e) {
-	        if (!mode) {
+	        if (!mode && currentStroke.size() > 0) {
                 //pass current stroke to the recognizer
                 dollar.Result r = dr.recognize(currentStroke);
                 String name = r.getName();

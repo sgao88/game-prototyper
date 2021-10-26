@@ -11,8 +11,16 @@ public class Effect {
         reward = r;
     }
 
+    public boolean getEffect() {
+        return reward;
+    }
+
     public void setEffect(boolean r) {
         reward = r;
+    }
+
+    public Rectangle getBoundingBox() {
+        return boundingBox;
     }
 
     public void move(int x, int y) {
