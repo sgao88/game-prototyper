@@ -10,9 +10,7 @@ public class Game {
 	private JRadioButtonMenuItem authorModeMenuItem;
 	private JRadioButtonMenuItem playModeMenuItem;
 	private ButtonGroup modeButtonGroup;
-
 	private GameBoard gameBoard;
-	//private JLabel tempLabel; //label to show play/author mode
 
 	public Game() {
 		frame = new JFrame();

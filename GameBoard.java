@@ -13,6 +13,7 @@ public class GameBoard extends JPanel implements ActionListener{
     ArrayList<Enemy> enemies;
     ArrayList<Platform> platforms;
     ArrayList<Effect> effects;
+    boolean canMove;
 
 	public GameBoard(boolean mode) {
         character = new MainCharacter();
@@ -22,6 +23,7 @@ public class GameBoard extends JPanel implements ActionListener{
         enemies = new ArrayList<>();
         platforms = new ArrayList<>();
         effects = new ArrayList<>();
+        canMove = true;
 
         this.addKeyListener(new KeyActionListener());
         this.addMouseListener(new MousePressReleaseListener());
@@ -32,20 +34,14 @@ public class GameBoard extends JPanel implements ActionListener{
     }
 
     public void actionPerformed(ActionEvent e) {
-	    character.move();
+	    if (mode) { checkCollisions(); }
+	    if (canMove) { character.move(); }
 	    repaint();
     }
 
     public void paint(Graphics g) {
 	    super.paint(g);
 	    Graphics2D g2d = (Graphics2D) g;
-	    int x = character.getX();
-	    int y = character.getY();
-	    int radius = character.getRadius();
-        x = x-(radius/2);
-        y = y-(radius/2);
-        g2d.setColor(new Color(0, 100, 0));
-        g2d.fillOval(x, y, radius, radius);
 
         //draw the enemies, platforms, and effects (doesn't matter what mode we're in)
         g2d.setColor(Color.red);
@@ -58,27 +54,30 @@ public class GameBoard extends JPanel implements ActionListener{
                 g2d.fillOval((int) b.getX(), (int) b.getY(), (int) b.getHeight(), (int) b.getHeight());
             }
         }
-
         g2d.setColor(new Color(150, 75, 0)); //brown
         for (int i = 0; i < platforms.size(); i++) {
             Rectangle b = platforms.get(i).getBoundingBox();
             g2d.fillRect((int) b.getX(), (int) b.getY(), (int) b.getWidth(), (int) b.getHeight());
         }
-
         for (int i = 0; i < effects.size(); i++) {
-            if (effects.get(i).getEffect()) {
-                g2d.setColor(Color.yellow);
+            if (effects.get(i).getVisible()) {
+                if (effects.get(i).getEffect()) {
+                    g2d.setColor(Color.yellow);
+                }
+                else {
+                    g2d.setColor(Color.black);
+                }
+
+                Rectangle b = effects.get(i).getBoundingBox();
+                //bottom left, bottom right, top midpoint
+                int[] xPoints = new int[] {(int)b.getX(), (int)(b.getX() + b.getWidth()), (int)(b.getX() + (b.getWidth()/2.0))};
+                int[] yPoints = new int[] {(int)(b.getY() + b.getHeight()), (int)(b.getY() + b.getHeight()), (int)b.getY()};
+                g2d.fillPolygon(xPoints, yPoints, 3);
             }
-            else {
-                g2d.setColor(Color.black);
-            }
-            Rectangle b = effects.get(i).getBoundingBox();
-            //bottom left, bottom right, top midpoint
-            int[] xPoints = new int[] {(int)b.getX(), (int)(b.getX() + b.getWidth()), (int)(b.getX() + (b.getWidth()/2.0))};
-            int[] yPoints = new int[] {(int)(b.getY() + b.getHeight()), (int)(b.getY() + b.getHeight()), (int)b.getY()};
-            g2d.fillPolygon(xPoints, yPoints, 3);
         }
-        g2d.setColor(Color.black);
+        //draw main character
+        g2d.setColor(new Color(0, 100, 0));
+        g2d.fillOval((int)character.getBounds().getX(), (int)character.getBounds().getY(), (int)character.getBounds().getWidth(), (int)character.getBounds().getHeight());
 
         //keep at end of the method so stroke is drawn on top of the other objects
         g2d.setColor(Color.black);
@@ -94,14 +93,53 @@ public class GameBoard extends JPanel implements ActionListener{
 	    mode = m;
     }
 
+    public void checkCollisions() {
+	    Rectangle item;
+	    for (int i = 0; i < enemies.size(); i++) {
+	        item = enemies.get(i).getBoundingBox();
+	        if (bump(character.getBounds(), item)) {
+	            canMove = false;
+            }
+        }
+	    for (int i = 0; i < platforms.size(); i++) {
+	        item = platforms.get(i).getBoundingBox();
+            if (bump(character.getBounds(), item)) {
+                canMove = false;
+            }
+        }
+	    for (int i = 0; i < effects.size(); i++) {
+	        item = effects.get(i).getBoundingBox();
+            if (bump(character.getBounds(), item)) {
+                effects.get(i).setVisible(false);
+            }
+        }
+    }
+
+    public boolean bump(Rectangle one, Rectangle two) {
+        //right edge of character is within bounds of the item's box
+        if (two.getX() <= one.getX() + one.getWidth() && one.getX() + one.getWidth() <= two.getX() + two.getWidth()) {
+            //top edge of character is within bounds of item's box
+            if (two.getY() <= one.getY() + one.getHeight() && one.getY() + one.getHeight() <= two.getY() + two.getHeight()) {
+                return true;
+            }
+            //bottom edge of character is within bounds of item's box
+            if (two.getY() <= one.getY() && one.getY() <= two.getY() + two.getHeight()) {
+                return true;
+            }
+            //top edge of character is above item and bottom edge of character is below item
+            if (one.getY() <= two.getY() && one.getY() + one.getHeight() >= two.getY() + two.getHeight()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private class KeyActionListener extends KeyAdapter{
 	    public void keyReleased(KeyEvent e) {
 	        character.keyReleased(e);
         }
 
-        public void keyPressed(KeyEvent e) {
-            character.keyPressed(e);
-        }
+        public void keyPressed(KeyEvent e) { character.keyPressed(e); }
     }
 
     private class MousePressReleaseListener implements MouseListener {
@@ -119,13 +157,10 @@ public class GameBoard extends JPanel implements ActionListener{
                 String name = r.getName();
                 //act on whatever the recognized template is
                 if (name.equals("triangle")) {
-                    System.out.println("Triangle Detected!!");
                     effects.add(new Effect(r.getBoundingBox(), true));
                 } else if (name.equals("circle")) {
-                    System.out.println("Circle Detected!!");
                     enemies.add(new Enemy(r.getBoundingBox()));
                 } else if (name.equals("rectangle")) {
-                    System.out.println("Rectangle Detected!!");
                     platforms.add(new Platform(r.getBoundingBox()));
                 }
                 currentStroke = null;
