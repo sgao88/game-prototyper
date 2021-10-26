@@ -4,20 +4,25 @@ import java.awt.event.*;
 import java.awt.geom.*;
 import java.util.ArrayList;
 
-
-
 public class GameBoard extends JPanel implements ActionListener{
     MainCharacter character;
     Timer time;
     boolean mode;
     dollar.DollarRecognizer dr;
     ArrayList<Point2D> currentStroke;
+    ArrayList<Enemy> enemies;
+    ArrayList<Platform> platforms;
+    ArrayList<Effect> effects;
 
 	public GameBoard(boolean mode) {
         character = new MainCharacter();
         this.mode = mode;
         dr = new dollar.DollarRecognizer();
         currentStroke = null;
+        enemies = new ArrayList<>();
+        platforms = new ArrayList<>();
+        effects = new ArrayList<>();
+
         this.addKeyListener(new KeyActionListener());
         this.addMouseListener(new MousePressReleaseListener());
         this.addMouseMotionListener(new MouseDragListener());
@@ -41,6 +46,10 @@ public class GameBoard extends JPanel implements ActionListener{
         y = y-(radius/2);
         g2d.setColor(new Color(0, 100, 0));
         g2d.fillOval(x, y, radius, radius);
+
+        //draw the enemies
+        //draw the platforms
+        //draw the effects
 
         //keep at end of the method so stroke is drawn on top of the other objects
         g2d.setColor(Color.black);
@@ -68,26 +77,31 @@ public class GameBoard extends JPanel implements ActionListener{
 
     private class MousePressReleaseListener implements MouseListener {
 	    public void mousePressed(MouseEvent e) {
-	        currentStroke = new ArrayList<>();
-            repaint();
+	        if (!mode) {
+	            currentStroke = new ArrayList<>();
+	            repaint();
+            }
         }
 
         public void mouseReleased(MouseEvent e) {
-	        //pass current stroke to the recognizer
-            dollar.Result r = dr.recognize(currentStroke);
-            String name = r.getName();
-            //act on whatever the recognized template is
-            if (name.equals("triangle")) {
-                System.out.println("Triangle Detected!!");
+	        if (!mode) {
+                //pass current stroke to the recognizer
+                dollar.Result r = dr.recognize(currentStroke);
+                String name = r.getName();
+                //act on whatever the recognized template is
+                if (name.equals("triangle")) {
+                    System.out.println("Triangle Detected!!");
+                    effects.add(new Effect(r.getBoundingBox(), true));
+                } else if (name.equals("circle")) {
+                    System.out.println("Circle Detected!!");
+                    enemies.add(new Enemy(r.getBoundingBox()));
+                } else if (name.equals("rectangle")) {
+                    System.out.println("Rectangle Detected!!");
+                    platforms.add(new Platform(r.getBoundingBox()));
+                }
+                currentStroke = null;
+                repaint();
             }
-            else if (name.equals("circle")) {
-                System.out.println("Circle Detected!!");
-            }
-            else if (name.equals("rectangle")) {
-                System.out.println("Rectangle Detected!!");
-            }
-            currentStroke = null;
-            repaint();
         }
 
         public void mouseClicked(MouseEvent e) {
@@ -105,8 +119,10 @@ public class GameBoard extends JPanel implements ActionListener{
 
     public class MouseDragListener implements MouseMotionListener {
         public void mouseDragged(MouseEvent e) {
-            currentStroke.add(e.getPoint());
-            repaint();
+            if (!mode) {
+                currentStroke.add(e.getPoint());
+                repaint();
+            }
         }
 
         public void mouseMoved(MouseEvent e) {
