@@ -35,7 +35,7 @@ public class GameBoard extends JPanel implements ActionListener{
 
     public void actionPerformed(ActionEvent e) {
 	    if (mode) { checkCollisions(); }
-	    if (canMove) { character.move(); }
+	    //if (canMove) { character.move(); }
 	    repaint();
     }
 
@@ -138,10 +138,10 @@ public class GameBoard extends JPanel implements ActionListener{
         public void keyPressed(KeyEvent e) {
             int key = e.getKeyCode();
             int dx = 0;
-            if (key == KeyEvent.VK_LEFT) {
+            if (key == KeyEvent.VK_LEFT && canMove) {
                 dx = -4; //This can be changed to speed up/slow down game. Larger dx == faster scrolling
             }
-            else if (key == KeyEvent.VK_RIGHT) {
+            else if (key == KeyEvent.VK_RIGHT && canMove) {
                 dx = 4;
             }
             //move each enemy, platform, and effect based on the key press

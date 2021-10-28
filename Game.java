@@ -39,11 +39,11 @@ public class Game {
 		menuBar.add(modeMenu);
 
 		gameBoard = new GameBoard(mode);
-		gameBoard.setSize(700, 250);
-		gameBoard.setPreferredSize(new Dimension(700, 250));
+		gameBoard.setSize(700, 300);
+		gameBoard.setPreferredSize(new Dimension(700, 300));
 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setMinimumSize(new Dimension(700, 250)); 
+		frame.setMinimumSize(new Dimension(700, 300));
 		frame.setJMenuBar(menuBar);
 		frame.add(gameBoard);
 		frame.pack();
