@@ -9,8 +9,9 @@ public class Platform {
         boundingBox = b;
     }
 
-    public void move(int x, int y) {
-        boundingBox.setLocation(x, y);
+    public void move(int dx) {
+        int currX = (int)boundingBox.getX();
+        boundingBox.setLocation(currX - dx, (int)boundingBox.getY());
     }
 
     public Rectangle getBoundingBox() {

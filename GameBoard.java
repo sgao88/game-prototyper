@@ -135,11 +135,46 @@ public class GameBoard extends JPanel implements ActionListener{
     }
 
     private class KeyActionListener extends KeyAdapter{
-	    public void keyReleased(KeyEvent e) {
-	        character.keyReleased(e);
+        public void keyPressed(KeyEvent e) {
+            int key = e.getKeyCode();
+            int dx = 0;
+            if (key == KeyEvent.VK_LEFT) {
+                dx = -4; //This can be changed to speed up/slow down game. Larger dx == faster scrolling
+            }
+            else if (key == KeyEvent.VK_RIGHT) {
+                dx = 4;
+            }
+            //move each enemy, platform, and effect based on the key press
+            for (int i = 0; i < enemies.size(); i++) {
+                enemies.get(i).move(dx);
+            }
+            for (int i = 0; i < platforms.size(); i++) {
+                platforms.get(i).move(dx);
+            }
+            for (int i = 0; i < effects.size(); i++) {
+                effects.get(i).move(dx);
+            }
         }
 
-        public void keyPressed(KeyEvent e) { character.keyPressed(e); }
+        public void keyReleased(KeyEvent e) {
+            int key = e.getKeyCode();
+            int dx = 0;
+            if (key == KeyEvent.VK_LEFT) {
+                dx = 0;
+            } else if (key == KeyEvent.VK_RIGHT) {
+                dx = 0;
+            }
+            //stop moving all enemies, platforms, and effects
+            for (int i = 0; i < enemies.size(); i++) {
+                enemies.get(i).move(dx);
+            }
+            for (int i = 0; i < platforms.size(); i++) {
+                platforms.get(i).move(dx);
+            }
+            for (int i = 0; i < effects.size(); i++) {
+                effects.get(i).move(dx);
+            }
+        }
     }
 
     private class MousePressReleaseListener implements MouseListener {

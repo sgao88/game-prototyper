@@ -33,7 +33,8 @@ public class Effect {
         return boundingBox;
     }
 
-    public void move(int x, int y) {
-        boundingBox.setLocation(x, y);
+    public void move(int dx) {
+        int currX = (int)boundingBox.getX();
+        boundingBox.setLocation(currX - dx, (int)boundingBox.getY());
     }
 }
