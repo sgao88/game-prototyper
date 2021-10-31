@@ -1,6 +1,4 @@
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 
 public class Effect extends DrawnObject {
     private boolean reward; //true == reward, false == penalty
