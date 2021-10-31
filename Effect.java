@@ -3,11 +3,13 @@ import java.awt.*;
 public class Effect extends DrawnObject {
     private boolean reward; //true == reward, false == penalty
     private boolean visible;
+    private int cost;
 
-    public Effect(Rectangle b, boolean r) {
+    public Effect(Rectangle b, boolean r, int c) {
         boundingBox = b;
         reward = r;
         visible = true;
+        cost = c;
     }
 
     public boolean getEffect() {
@@ -24,5 +26,13 @@ public class Effect extends DrawnObject {
 
     public void setVisible(boolean v) {
         visible = v;
+    }
+
+    public int getCost() {
+        return cost;
+    }
+
+    public void setCost(int c) {
+        cost = c;
     }
 }
