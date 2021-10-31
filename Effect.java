@@ -2,8 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-public class Effect {
-    private Rectangle boundingBox;
+public class Effect extends DrawnObject {
     private boolean reward; //true == reward, false == penalty
     private boolean visible;
 
@@ -27,14 +26,5 @@ public class Effect {
 
     public void setVisible(boolean v) {
         visible = v;
-    }
-
-    public Rectangle getBoundingBox() {
-        return boundingBox;
-    }
-
-    public void move(int dx) {
-        int currX = (int)boundingBox.getX();
-        boundingBox.setLocation(currX - dx, (int)boundingBox.getY());
     }
 }

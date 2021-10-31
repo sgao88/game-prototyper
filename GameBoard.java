@@ -8,27 +8,35 @@ public class GameBoard extends JPanel implements ActionListener{
     MainCharacter character;
     Timer time;
     boolean mode;
+    boolean editorMode;
     dollar.DollarRecognizer dr;
     ArrayList<Point2D> currentStroke;
     ArrayList<Enemy> enemies;
     ArrayList<Platform> platforms;
     ArrayList<Effect> effects;
+    ArrayList<DrawnObject> allObjects;
     boolean canMove;
+    boolean dragging;
+    Point currPoint;
+    DrawnObject curr;
 
-	public GameBoard(boolean mode) {
+	public GameBoard(boolean mode, boolean editorMode) {
         character = new MainCharacter();
         this.mode = mode;
+        this.editorMode = editorMode;
         dr = new dollar.DollarRecognizer();
         currentStroke = null;
         enemies = new ArrayList<>();
         platforms = new ArrayList<>();
         effects = new ArrayList<>();
+        allObjects = new ArrayList<>();
         canMove = true;
 
         this.addKeyListener(new KeyActionListener());
         this.addMouseListener(new MousePressReleaseListener());
         this.addMouseMotionListener(new MouseDragListener());
-        setFocusable(true); //let's you move left/right when you press keys
+        setFocusable(true); //lets you move left/right when you press keys
+        this.requestFocus();
         time = new Timer(5, this); //update image every 5 milliseconds
         time.start(); //runs methods for actionPerformed
     }
@@ -91,7 +99,18 @@ public class GameBoard extends JPanel implements ActionListener{
 
     public void setMode(boolean m) {
 	    mode = m;
+        if (m = true) {
+            this.requestFocus();
+        }
     }
+
+    public void setEditorMode(boolean m) {
+        editorMode = m;
+    }
+
+    public boolean getMode() { return mode; }
+
+    public boolean getEditorMode() { return editorMode; }
 
     public void checkCollisions() {
 	    Rectangle item;
@@ -134,7 +153,7 @@ public class GameBoard extends JPanel implements ActionListener{
         return false;
     }
 
-    private class KeyActionListener extends KeyAdapter{
+    private class KeyActionListener extends KeyAdapter {
         public void keyPressed(KeyEvent e) {
             int key = e.getKeyCode();
             int dx = 0;
@@ -145,14 +164,8 @@ public class GameBoard extends JPanel implements ActionListener{
                 dx = 4;
             }
             //move each enemy, platform, and effect based on the key press
-            for (int i = 0; i < enemies.size(); i++) {
-                enemies.get(i).move(dx);
-            }
-            for (int i = 0; i < platforms.size(); i++) {
-                platforms.get(i).move(dx);
-            }
-            for (int i = 0; i < effects.size(); i++) {
-                effects.get(i).move(dx);
+            for (DrawnObject obj : allObjects) {
+                obj.move(dx);
             }
         }
 
@@ -165,67 +178,105 @@ public class GameBoard extends JPanel implements ActionListener{
                 dx = 0;
             }
             //stop moving all enemies, platforms, and effects
-            for (int i = 0; i < enemies.size(); i++) {
-                enemies.get(i).move(dx);
+            for (DrawnObject obj : allObjects) {
+                obj.move(dx);
             }
-            for (int i = 0; i < platforms.size(); i++) {
-                platforms.get(i).move(dx);
-            }
-            for (int i = 0; i < effects.size(); i++) {
-                effects.get(i).move(dx);
-            }
+        }
+    }
+
+    private boolean within(DrawnObject obj, Point p) {
+        if (obj.getBoundingBox().contains(p)) {
+            return true;
+        } else {
+            return false;
         }
     }
 
     private class MousePressReleaseListener implements MouseListener {
 	    public void mousePressed(MouseEvent e) {
-	        if (!mode) {
+	        if (!mode && editorMode) {
 	            currentStroke = new ArrayList<>();
 	            repaint();
+            } else if (!mode) {
+                // mouse press to enter dragging object mode, !editorMode implied
+                currPoint = e.getPoint();
+                if (curr == null && allObjects.size() > 0) {
+                    for (DrawnObject obj : allObjects) {
+                        if (within(obj, e.getPoint())) {
+                            // existing event drag
+                            curr = obj;
+                            return;
+                        }
+                    }
+                }
             }
         }
 
         public void mouseReleased(MouseEvent e) {
-	        if (!mode && currentStroke.size() > 0) {
+	        if (!mode && editorMode && currentStroke.size() > 0) {
                 //pass current stroke to the recognizer
                 dollar.Result r = dr.recognize(currentStroke);
                 String name = r.getName();
                 //act on whatever the recognized template is
                 if (name.equals("triangle")) {
-                    effects.add(new Effect(r.getBoundingBox(), true));
+                    Effect temp = new Effect(r.getBoundingBox(), true);
+                    effects.add(temp);
+                    allObjects.add(temp);
                 } else if (name.equals("circle")) {
-                    enemies.add(new Enemy(r.getBoundingBox()));
+                    Enemy temp = new Enemy(r.getBoundingBox());
+                    enemies.add(temp);
+                    allObjects.add(temp);
                 } else if (name.equals("rectangle")) {
-                    platforms.add(new Platform(r.getBoundingBox()));
+                    Platform temp = new Platform(r.getBoundingBox());
+                    platforms.add(temp);
+                    allObjects.add(temp);
                 }
                 currentStroke = null;
+                repaint();
+            } else if (!mode && !editorMode && curr != null && dragging) {
+                // mouse released to exit dragging object mode
+                dragging = false;
+                currPoint = e.getPoint();
+                // final update for end location
+                int xDiff = curr.getBoundingBox().x - currPoint.x;
+                int yDiff = curr.getBoundingBox().y - currPoint.y;
+                curr.move(xDiff);
+                curr.moveY(yDiff);
+                curr = null;
+                currPoint = null;
                 repaint();
             }
         }
 
         public void mouseClicked(MouseEvent e) {
-
         }
 
         public void mouseEntered(MouseEvent e) {
-
         }
 
         public void mouseExited(MouseEvent e) {
-
         }
     }
 
     public class MouseDragListener implements MouseMotionListener {
         public void mouseDragged(MouseEvent e) {
-            if (!mode) {
+            if (!mode && editorMode) {
                 currentStroke.add(e.getPoint());
+                repaint();
+            } else if (!mode && curr != null) {
+                // mouse dragging for moving objects, !editorMode implied
+                dragging = true;
+                // work off of curr value
+                currPoint = e.getPoint();
+                int xDiff = curr.getBoundingBox().x - currPoint.x;
+                int yDiff = curr.getBoundingBox().y - currPoint.y;
+                curr.move(xDiff);
+                curr.moveY(yDiff);
                 repaint();
             }
         }
 
         public void mouseMoved(MouseEvent e) {
-
         }
     }
 }
