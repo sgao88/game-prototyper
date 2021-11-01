@@ -1,55 +1,42 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 
 public class MainCharacter {
     int x, dx; //current x coordinate and change in x that needs to happen
     int y;
     int radius;
+    Rectangle bounds;
 
     public MainCharacter() {
-        x = 35;
-        y = 220;
+        x = 30;
+        y = 270;
         radius = 50;
-    }
-
-    public void move() {
-        if (x + dx >= 35 && x + dx <= 680) { //make sure it doesn't run off page
-            x = x + dx;
-        }
+        bounds = new Rectangle(x-(radius/2), y-(radius/2), radius, radius);
     }
 
     public int getX() {
         return x;
     }
 
-    public int getY() {
-        return y;
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() { return y; }
+
+    public void setY(int y) {
+        this.y = y;
     }
 
     public int getRadius() {
         return radius;
     }
 
-    public void keyPressed(KeyEvent e) {
-        int key = e.getKeyCode();
-
-        if (key == KeyEvent.VK_LEFT) {
-            dx = -1;
-        }
-        else if (key == KeyEvent.VK_RIGHT) {
-            dx = 1;
-        }
+    public void setRadius(int r) {
+        radius = r;
     }
 
-    public void keyReleased(KeyEvent e) {
-        int key = e.getKeyCode();
-
-        if (key == KeyEvent.VK_LEFT) {
-            dx = 0;
-        }
-        else if (key == KeyEvent.VK_RIGHT) {
-            dx = 0;
-        }
-    }
+    public Rectangle getBounds() { return bounds; }
 }
