@@ -12,10 +12,12 @@ public class GameBoard extends JPanel implements ActionListener{
     dollar.DollarRecognizer dr;
     ArrayList<Point2D> currentStroke;
     ArrayList<DrawnObject> allObjects;
+    ArrayList<Effect> hitEffects;
     boolean canMove;
     boolean dragging;
     Point currPoint;
     DrawnObject curr;
+    int score;
 
     JDialog dialog;
     JPanel fieldPanel;
@@ -43,7 +45,9 @@ public class GameBoard extends JPanel implements ActionListener{
         dr = new dollar.DollarRecognizer();
         currentStroke = null;
         allObjects = new ArrayList<>();
+        hitEffects = new ArrayList<>();
         canMove = true;
+        score = 0;
 
         dialog = new JDialog();
         dialog.setLayout(new BorderLayout());
@@ -191,7 +195,7 @@ public class GameBoard extends JPanel implements ActionListener{
                    else {
                        ((Effect)temp).setEffect(false);
                    }
-                   ((Effect)temp).setCost(Integer.parseInt(costTextField.getText()));
+                   ((Effect)temp).setCost(Math.abs(Integer.parseInt(costTextField.getText()))); //Math.abs to control for if they put in a negative number for the penalty
                    allObjects.add((DrawnObject)temp);
                }
                dialog.setVisible(false);
@@ -282,18 +286,49 @@ public class GameBoard extends JPanel implements ActionListener{
 
     public boolean getEditorMode() { return editorMode; }
 
+    public int getScore() { return score; }
+
+    public void addPlatform() {
+	    Rectangle boundingBox = new Rectangle(640, 240, 50, 50);
+        Platform p = new Platform(boundingBox);
+        allObjects.add(p);
+    }
+
+    public void addEnemy() {
+        Rectangle boundingBox = new Rectangle(640, 240, 50, 50);
+        Enemy e = new Enemy(boundingBox);
+        allObjects.add(e);
+    }
+
+    public void addEffect(boolean isReward) {
+        Rectangle boundingBox = new Rectangle( 640, 240, 50, 50);
+        Effect e = new Effect(boundingBox, isReward, 0);
+        allObjects.add(e);
+    }
+
     public void checkCollisions() {
 	    Rectangle item;
 	    for (DrawnObject obj : allObjects) {
 	        item = obj.getBoundingBox();
 	        if (bump(character.getBounds(), item)) {
-	            if (obj instanceof Effect) {
-                    ((Effect)obj).setVisible(false);
+	            if (obj instanceof Effect && !hitEffects.contains(obj)) {
+	                hitEffects.add((Effect)obj);
+	                ((Effect)obj).setVisible(false);
+
+	                boolean isReward = ((Effect)obj).getEffect();
+	                int cost = ((Effect)obj).getCost();
+	                if (isReward) {
+	                    score += cost;
+	                    System.out.println("New score is " + score);
+                    }
+	                else {
+	                    score -= cost;
+	                    System.out.println("New score is " + score);
+                    }
                 }
-	            else {
+	            else if (obj instanceof Platform || obj instanceof Enemy){
 	                canMove = false;
                 }
-	            canMove = false;
             }
         }
     }
@@ -371,6 +406,14 @@ public class GameBoard extends JPanel implements ActionListener{
                                 widthInput.setText("" + obj.getBoundingBox().getWidth());
                                 heightInput.setText("" + obj.getBoundingBox().getHeight());
                                 if (obj instanceof Effect) {
+                                    if (((Effect)obj).getEffect()) {
+                                        rewardButton.setSelected(true);
+                                        penaltyButton.setSelected(false);
+                                    }
+                                    else {
+                                        rewardButton.setSelected(false);
+                                        penaltyButton.setSelected(true);
+                                    }
                                     rewardButton.setEnabled(true);
                                     penaltyButton.setEnabled(true);
                                     rewardButton.setForeground(Color.black);
