@@ -18,6 +18,8 @@ public class GameBoard extends JPanel implements ActionListener{
     Point currPoint;
     DrawnObject curr;
     int score;
+    int boundaryX;
+    boolean draggingAndScrolling;
 
     JDialog dialog;
     JPanel fieldPanel;
@@ -48,6 +50,8 @@ public class GameBoard extends JPanel implements ActionListener{
         hitEffects = new ArrayList<>();
         canMove = true;
         score = 0;
+        boundaryX = 680;
+        draggingAndScrolling = false;
 
         dialog = new JDialog();
         dialog.setLayout(new BorderLayout());
@@ -531,7 +535,7 @@ public class GameBoard extends JPanel implements ActionListener{
     }
 
     public class MouseDragListener implements MouseMotionListener {
-        public void mouseDragged(MouseEvent e) {
+	    public void mouseDragged(MouseEvent e) {
             if (!mode && editorMode) {
                 currentStroke.add(e.getPoint());
                 repaint();
@@ -542,7 +546,35 @@ public class GameBoard extends JPanel implements ActionListener{
                 currPoint = e.getPoint();
                 int xDiff = curr.getBoundingBox().x - currPoint.x;
                 int yDiff = curr.getBoundingBox().y - currPoint.y;
-                curr.move(xDiff);
+                if ((currPoint.x >= boundaryX || currPoint.x <= 10) && !draggingAndScrolling) {
+                    //start scrolling
+                    draggingAndScrolling = true;
+                    for (DrawnObject obj : allObjects) {
+                        obj.move( -1 * xDiff);
+                    }
+                }
+                else if ((currPoint.x >= boundaryX || currPoint.x <= 10) && draggingAndScrolling) {
+                    //keep scrolling
+                    int dx = 0;
+                    if (currPoint.x >= boundaryX) { //move objects left
+                        dx = 4;
+                    }
+                    else { //move objects right
+                        dx = -4;
+                    }
+                    for (DrawnObject obj : allObjects) {
+                        if (!obj.equals(curr)) {
+                            obj.move(dx);
+                        }
+                    }
+                }
+                else {
+                    //stop scrolling if necessary, just drag normally
+                    if (draggingAndScrolling) {
+                        draggingAndScrolling = false;
+                    }
+                    curr.move(xDiff);
+                }
                 curr.moveY(yDiff);
                 repaint();
             }
