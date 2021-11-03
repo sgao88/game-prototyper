@@ -10,6 +10,7 @@ public class Game {
 	private JMenu modeMenu;
 	private JRadioButtonMenuItem authorModeMenuItem;
 	private JRadioButtonMenuItem playModeMenuItem;
+	private JLabel gameModeLabel;
 	private ButtonGroup modeButtonGroup;
 	private JPanel sidePanel;
 	private JRadioButton drawingModeButton;
@@ -21,14 +22,17 @@ public class Game {
 		frame = new JFrame();
 		mode = false;
 		menuBar = new JMenuBar();
-		modeMenu = new JMenu("Prototyper Mode");
+		modeMenu = new JMenu("Game Mode");
 		authorModeMenuItem = new JRadioButtonMenuItem("Author", true);
 		playModeMenuItem = new JRadioButtonMenuItem("Play", false);
 		modeButtonGroup = new ButtonGroup();
 
 		sidePanel = new JPanel();
 		sidePanel.setPreferredSize(new Dimension(200, 300));
-		sidePanel.setBackground(Color.GRAY);
+		sidePanel.setBackground(Color.white);
+		gameModeLabel = new JLabel("AUTHOR");
+		gameModeLabel.setFont(new Font("San Serif", Font.BOLD, 20));
+		sidePanel.add(gameModeLabel);
 		drawingModeButton = new JRadioButton("Drawing Mode", true);
 		draggingModeButton = new JRadioButton("Dragging Mode", false);
 		sidePanelGroup = new ButtonGroup();
@@ -36,9 +40,9 @@ public class Game {
 		authorModeMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent c) {
 				toggleMode();
+				gameModeLabel.setText("AUTHOR");
 				sidePanel.add(drawingModeButton);
 				sidePanel.add(draggingModeButton);
-				sidePanel.setBackground(Color.GRAY);
 				System.out.println("1gameboard's mode is " + gameBoard.getMode());
 				System.out.println("1gameboard's editormode is " + gameBoard.getEditorMode());
 			}
@@ -49,7 +53,8 @@ public class Game {
 				for (Component j: sidePanel.getComponents()) {
 					sidePanel.remove(j);
 				}
-				sidePanel.setBackground(Color.BLACK);
+				gameModeLabel.setText("PLAY");
+				sidePanel.add(gameModeLabel);
 				System.out.println("2gameboard's mode is " + gameBoard.getMode());
 				System.out.println("2gameboard's editormode is " + gameBoard.getEditorMode());
 			}
