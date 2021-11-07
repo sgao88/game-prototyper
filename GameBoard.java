@@ -20,6 +20,7 @@ public class GameBoard extends JPanel implements ActionListener{
     int score;
     int boundaryX;
     boolean draggingAndScrolling;
+    boolean jumping;
 
     JDialog dialog;
     JPanel fieldPanel;
@@ -52,6 +53,7 @@ public class GameBoard extends JPanel implements ActionListener{
         score = 0;
         boundaryX = 680;
         draggingAndScrolling = false;
+        jumping = false;
 
         dialog = new JDialog();
         dialog.setLayout(new BorderLayout());
@@ -225,7 +227,7 @@ public class GameBoard extends JPanel implements ActionListener{
     }
 
     public void actionPerformed(ActionEvent e) {
-	    if (mode) { checkCollisions(); }
+	    if (mode) { checkCollisions(true); }
 	    repaint();
     }
 
@@ -310,8 +312,13 @@ public class GameBoard extends JPanel implements ActionListener{
         allObjects.add(e);
     }
 
-    public void checkCollisions() {
+    public void checkCollisions(boolean isGravity) {
 	    Rectangle item;
+        if (isGravity && !jumping) {
+            if (character.getY() < 269) {
+                character.moveY(-1);
+            }
+        }
 	    for (DrawnObject obj : allObjects) {
 	        item = obj.getBoundingBox();
 	        if (bump(character.getBounds(), item)) {
@@ -330,8 +337,12 @@ public class GameBoard extends JPanel implements ActionListener{
 	                    System.out.println("New score is " + score);
                     }
                 }
-	            else if (obj instanceof Platform || obj instanceof Enemy){
-	                canMove = false;
+	            else if (canMove && (obj instanceof Platform || obj instanceof Enemy)) {
+                    if (isGravity && !jumping) {
+                        character.setY(obj.getBoundingBox().y + character.getBounds().height + 1);
+                    } else {
+                        canMove = false;
+                    }
                 }
             }
         }
@@ -360,30 +371,42 @@ public class GameBoard extends JPanel implements ActionListener{
         public void keyPressed(KeyEvent e) {
             int key = e.getKeyCode();
             int dx = 0;
+            int dy = 0;
             if (key == KeyEvent.VK_LEFT && canMove) {
                 dx = -4; //This can be changed to speed up/slow down game. Larger dx == faster scrolling
             }
             else if (key == KeyEvent.VK_RIGHT && canMove) {
                 dx = 4;
             }
+            if (key == KeyEvent.VK_UP && canMove) {
+                jumping = true;
+                dy = 10;
+            }
             //move each enemy, platform, and effect based on the key press
             for (DrawnObject obj : allObjects) {
                 obj.move(dx);
             }
+            character.moveY(dy);
         }
 
         public void keyReleased(KeyEvent e) {
             int key = e.getKeyCode();
             int dx = 0;
+            int dy = 0;
             if (key == KeyEvent.VK_LEFT) {
                 dx = 0;
             } else if (key == KeyEvent.VK_RIGHT) {
                 dx = 0;
             }
+            if (key == KeyEvent.VK_UP && canMove) {
+                jumping = false;
+                dy = 15;
+            }
             //stop moving all enemies, platforms, and effects
             for (DrawnObject obj : allObjects) {
                 obj.move(dx);
             }
+            character.moveY(dy);
         }
     }
 
