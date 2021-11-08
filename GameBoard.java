@@ -12,10 +12,15 @@ public class GameBoard extends JPanel implements ActionListener{
     dollar.DollarRecognizer dr;
     ArrayList<Point2D> currentStroke;
     ArrayList<DrawnObject> allObjects;
+    ArrayList<Effect> hitEffects;
     boolean canMove;
     boolean dragging;
     Point currPoint;
     DrawnObject curr;
+    int score;
+    int boundaryX;
+    boolean draggingAndScrolling;
+    boolean jumping;
 
     JDialog dialog;
     JPanel fieldPanel;
@@ -43,7 +48,12 @@ public class GameBoard extends JPanel implements ActionListener{
         dr = new dollar.DollarRecognizer();
         currentStroke = null;
         allObjects = new ArrayList<>();
+        hitEffects = new ArrayList<>();
         canMove = true;
+        score = 0;
+        boundaryX = 680;
+        draggingAndScrolling = false;
+        jumping = false;
 
         dialog = new JDialog();
         dialog.setLayout(new BorderLayout());
@@ -191,7 +201,7 @@ public class GameBoard extends JPanel implements ActionListener{
                    else {
                        ((Effect)temp).setEffect(false);
                    }
-                   ((Effect)temp).setCost(Integer.parseInt(costTextField.getText()));
+                   ((Effect)temp).setCost(Math.abs(Integer.parseInt(costTextField.getText()))); //Math.abs to control for if they put in a negative number for the penalty
                    allObjects.add((DrawnObject)temp);
                }
                dialog.setVisible(false);
@@ -217,7 +227,7 @@ public class GameBoard extends JPanel implements ActionListener{
     }
 
     public void actionPerformed(ActionEvent e) {
-	    if (mode) { checkCollisions(); }
+	    if (mode) { checkCollisions(true); }
 	    repaint();
     }
 
@@ -282,18 +292,58 @@ public class GameBoard extends JPanel implements ActionListener{
 
     public boolean getEditorMode() { return editorMode; }
 
-    public void checkCollisions() {
+    public int getScore() { return score; }
+
+    public void addPlatform() {
+	    Rectangle boundingBox = new Rectangle(640, 240, 50, 50);
+        Platform p = new Platform(boundingBox);
+        allObjects.add(p);
+    }
+
+    public void addEnemy() {
+        Rectangle boundingBox = new Rectangle(640, 240, 50, 50);
+        Enemy e = new Enemy(boundingBox);
+        allObjects.add(e);
+    }
+
+    public void addEffect(boolean isReward) {
+        Rectangle boundingBox = new Rectangle( 640, 240, 50, 50);
+        Effect e = new Effect(boundingBox, isReward, 0);
+        allObjects.add(e);
+    }
+
+    public void checkCollisions(boolean isGravity) {
 	    Rectangle item;
+        if (isGravity && !jumping) {
+            if (character.getY() < 269) {
+                character.moveY(-1);
+            }
+        }
 	    for (DrawnObject obj : allObjects) {
 	        item = obj.getBoundingBox();
 	        if (bump(character.getBounds(), item)) {
-	            if (obj instanceof Effect) {
-                    ((Effect)obj).setVisible(false);
+	            if (obj instanceof Effect && !hitEffects.contains(obj)) {
+	                hitEffects.add((Effect)obj);
+	                ((Effect)obj).setVisible(false);
+
+	                boolean isReward = ((Effect)obj).getEffect();
+	                int cost = ((Effect)obj).getCost();
+	                if (isReward) {
+	                    score += cost;
+	                    System.out.println("New score is " + score);
+                    }
+	                else {
+	                    score -= cost;
+	                    System.out.println("New score is " + score);
+                    }
                 }
-	            else {
-	                canMove = false;
+	            else if (canMove && (obj instanceof Platform || obj instanceof Enemy)) {
+                    if (isGravity && !jumping) {
+                        character.setY(obj.getBoundingBox().y + character.getBounds().height + 1);
+                    } else {
+                        canMove = false;
+                    }
                 }
-	            canMove = false;
             }
         }
     }
@@ -321,30 +371,42 @@ public class GameBoard extends JPanel implements ActionListener{
         public void keyPressed(KeyEvent e) {
             int key = e.getKeyCode();
             int dx = 0;
+            int dy = 0;
             if (key == KeyEvent.VK_LEFT && canMove) {
                 dx = -4; //This can be changed to speed up/slow down game. Larger dx == faster scrolling
             }
             else if (key == KeyEvent.VK_RIGHT && canMove) {
                 dx = 4;
             }
+            if (key == KeyEvent.VK_UP && canMove) {
+                jumping = true;
+                dy = 10;
+            }
             //move each enemy, platform, and effect based on the key press
             for (DrawnObject obj : allObjects) {
                 obj.move(dx);
             }
+            character.moveY(dy);
         }
 
         public void keyReleased(KeyEvent e) {
             int key = e.getKeyCode();
             int dx = 0;
+            int dy = 0;
             if (key == KeyEvent.VK_LEFT) {
                 dx = 0;
             } else if (key == KeyEvent.VK_RIGHT) {
                 dx = 0;
             }
+            if (key == KeyEvent.VK_UP && canMove) {
+                jumping = false;
+                dy = 15;
+            }
             //stop moving all enemies, platforms, and effects
             for (DrawnObject obj : allObjects) {
                 obj.move(dx);
             }
+            character.moveY(dy);
         }
     }
 
@@ -371,6 +433,14 @@ public class GameBoard extends JPanel implements ActionListener{
                                 widthInput.setText("" + obj.getBoundingBox().getWidth());
                                 heightInput.setText("" + obj.getBoundingBox().getHeight());
                                 if (obj instanceof Effect) {
+                                    if (((Effect)obj).getEffect()) {
+                                        rewardButton.setSelected(true);
+                                        penaltyButton.setSelected(false);
+                                    }
+                                    else {
+                                        rewardButton.setSelected(false);
+                                        penaltyButton.setSelected(true);
+                                    }
                                     rewardButton.setEnabled(true);
                                     penaltyButton.setEnabled(true);
                                     rewardButton.setForeground(Color.black);
@@ -488,7 +558,7 @@ public class GameBoard extends JPanel implements ActionListener{
     }
 
     public class MouseDragListener implements MouseMotionListener {
-        public void mouseDragged(MouseEvent e) {
+	    public void mouseDragged(MouseEvent e) {
             if (!mode && editorMode) {
                 currentStroke.add(e.getPoint());
                 repaint();
@@ -499,7 +569,35 @@ public class GameBoard extends JPanel implements ActionListener{
                 currPoint = e.getPoint();
                 int xDiff = curr.getBoundingBox().x - currPoint.x;
                 int yDiff = curr.getBoundingBox().y - currPoint.y;
-                curr.move(xDiff);
+                if ((currPoint.x >= boundaryX || currPoint.x <= 10) && !draggingAndScrolling) {
+                    //start scrolling
+                    draggingAndScrolling = true;
+                    for (DrawnObject obj : allObjects) {
+                        obj.move( -1 * xDiff);
+                    }
+                }
+                else if ((currPoint.x >= boundaryX || currPoint.x <= 10) && draggingAndScrolling) {
+                    //keep scrolling
+                    int dx = 0;
+                    if (currPoint.x >= boundaryX) { //move objects left
+                        dx = 4;
+                    }
+                    else { //move objects right
+                        dx = -4;
+                    }
+                    for (DrawnObject obj : allObjects) {
+                        if (!obj.equals(curr)) {
+                            obj.move(dx);
+                        }
+                    }
+                }
+                else {
+                    //stop scrolling if necessary, just drag normally
+                    if (draggingAndScrolling) {
+                        draggingAndScrolling = false;
+                    }
+                    curr.move(xDiff);
+                }
                 curr.moveY(yDiff);
                 repaint();
             }
