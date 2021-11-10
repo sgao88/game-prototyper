@@ -7,7 +7,8 @@ public class Game implements ActionListener{
 	private JFrame frame;
 	private Timer time;
 	private boolean mode; //true == play mode, false == author mode
-	private boolean editorMode = true; // default true == drawing mode, false == dragging mode
+	//private boolean editorMode = true; // default true == drawing mode, false == dragging mode
+	private int editorMode; // 0 = drawing, 1 = dragging, 2 = animating
 	private JMenuBar menuBar;
 	private JMenu modeMenu;
 	private JRadioButtonMenuItem authorModeMenuItem;
@@ -103,21 +104,23 @@ public class Game implements ActionListener{
 
 		drawingModeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent c) {
-				toggleEditorMode();
+				toggleEditorMode(0);
 				System.out.println("3gameboard's mode is " + gameBoard.getMode());
 				System.out.println("3gameboard's editormode is " + gameBoard.getEditorMode());
 			}
 		});
 		draggingModeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent c) {
-				toggleEditorMode();
+				toggleEditorMode(1);
 				System.out.println("4gameboard's mode is " + gameBoard.getMode());
 				System.out.println("4gameboard's editormode is " + gameBoard.getEditorMode());
 			}
 		});
 		animatingModeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent c) {
-				System.out.println("Need to implement this action listener for the animation mode");
+				toggleEditorMode(2);
+				System.out.println("5gameboard's mode is " + gameBoard.getMode());
+				System.out.println("5gameboard's editormode is " + gameBoard.getEditorMode());
 			}
 		});
 
@@ -191,27 +194,18 @@ public class Game implements ActionListener{
 		if (mode) {
 			mode = false;
 			//toggle from play mode to author mode
-			gameBoard.setMode(mode);
 		}
 		else {
 			mode = true;
 			//toggle from author mode to play mode
-			gameBoard.setMode(mode);
 		}
+		gameBoard.setMode(mode);
 		frame.repaint();
 	}
 
-	private void toggleEditorMode() {
-		if (editorMode) {
-			editorMode = false;
-			//toggle from play mode to author mode
-			gameBoard.setEditorMode(editorMode);
-		}
-		else {
-			editorMode = true;
-			//toggle from author mode to play mode
-			gameBoard.setEditorMode(editorMode);
-		}
+	private void toggleEditorMode(int inputMode) {
+		editorMode = inputMode;
+		gameBoard.setEditorMode(inputMode);
 		frame.repaint();
 	}
 }

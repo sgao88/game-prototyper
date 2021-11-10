@@ -8,7 +8,7 @@ public class GameBoard extends JPanel implements ActionListener{
     MainCharacter character;
     Timer time;
     boolean mode;
-    boolean editorMode;
+    int editorMode;
     dollar.DollarRecognizer dr;
     ArrayList<Point2D> currentStroke;
     ArrayList<DrawnObject> allObjects;
@@ -41,7 +41,7 @@ public class GameBoard extends JPanel implements ActionListener{
     JButton deleteButton;
     JButton saveButton;
 
-	public GameBoard(boolean mode, boolean editorMode) {
+	public GameBoard(boolean mode, int editorMode) {
         character = new MainCharacter();
         this.mode = mode;
         this.editorMode = editorMode;
@@ -284,13 +284,13 @@ public class GameBoard extends JPanel implements ActionListener{
         }
     }
 
-    public void setEditorMode(boolean m) {
+    public void setEditorMode(int m) {
         editorMode = m;
     }
 
     public boolean getMode() { return mode; }
 
-    public boolean getEditorMode() { return editorMode; }
+    public int getEditorMode() { return editorMode; }
 
     public int getScore() { return score; }
 
@@ -485,12 +485,13 @@ public class GameBoard extends JPanel implements ActionListener{
                     currentStroke = new ArrayList<>();
                     repaint();
                 }
-                else if (editorMode) {
+                else if (editorMode == 0) {
+                    // drawing mode
                     currentStroke = new ArrayList<>();
                     repaint();
                 }
-                else {
-                    // mouse press to enter dragging object mode, !editorMode implied
+                else if (editorMode == 1) {
+                    // mouse press to enter dragging object mode
                     currPoint = e.getPoint();
                     if (curr == null && allObjects.size() > 0) {
                         for (DrawnObject obj : allObjects) {
@@ -501,12 +502,15 @@ public class GameBoard extends JPanel implements ActionListener{
                             }
                         }
                     }
+                } else if (editorMode == 2 && curr != null) {
+                    // mouse press to start drawing an animation object
+                    // associated with the curr object
                 }
             }
         }
 
         public void mouseReleased(MouseEvent e) {
-	        if (!mode && editorMode && currentStroke.size() > 0) {
+	        if (!mode && editorMode == 0 && currentStroke.size() > 0) {
                 //pass current stroke to the recognizer
                 dollar.Result r = dr.recognize(currentStroke);
                 if (r.getMatchedTemplate() != null) {
@@ -532,7 +536,7 @@ public class GameBoard extends JPanel implements ActionListener{
                 }
                 currentStroke = null;
                 repaint();
-            } else if (!mode && !editorMode && curr != null && dragging) {
+            } else if (!mode && editorMode == 1 && curr != null && dragging) {
                 // mouse released to exit dragging object mode
                 dragging = false;
                 currPoint = e.getPoint();
@@ -559,7 +563,7 @@ public class GameBoard extends JPanel implements ActionListener{
 
     public class MouseDragListener implements MouseMotionListener {
 	    public void mouseDragged(MouseEvent e) {
-            if (!mode && editorMode) {
+            if (!mode && editorMode == 0) {
                 currentStroke.add(e.getPoint());
                 repaint();
             } else if (!mode && curr != null) {

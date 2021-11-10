@@ -1,7 +1,9 @@
+import org.pushingpixels.radiance.animation.api.Timeline;
 import java.awt.*;
 
 public abstract class DrawnObject {
     Rectangle boundingBox;
+    Timeline animation;
 
     public DrawnObject() {
     }
