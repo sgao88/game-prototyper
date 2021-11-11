@@ -228,6 +228,11 @@ public class GameBoard extends JPanel implements ActionListener{
 
     public void actionPerformed(ActionEvent e) {
 	    if (mode) { checkCollisions(true); }
+        if (!jumping) {
+            if (character.getY() < 250) {
+                character.moveY(-1);
+            }
+        }
 	    repaint();
     }
 
@@ -314,11 +319,6 @@ public class GameBoard extends JPanel implements ActionListener{
 
     public void checkCollisions(boolean isGravity) {
 	    Rectangle item;
-        if (isGravity && !jumping) {
-            if (character.getY() < 269) {
-                character.moveY(-1);
-            }
-        }
 	    for (DrawnObject obj : allObjects) {
 	        item = obj.getBoundingBox();
 	        if (bump(character.getBounds(), item)) {
