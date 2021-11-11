@@ -17,6 +17,7 @@ public class GameBoard extends JPanel implements ActionListener{
     boolean dragging;
     Point currPoint;
     DrawnObject curr;
+    DrawnObject currAnim;
     int score;
     int boundaryX;
     boolean draggingAndScrolling;
@@ -120,7 +121,11 @@ public class GameBoard extends JPanel implements ActionListener{
         saveButton.addActionListener(new ActionListener() {
            public void actionPerformed(ActionEvent c) {
                Object temp;
+               boolean updatingCurrAnim = false;
                if (curr != null) { //if curr is null, the main character should be updated
+                   if (curr.equals(currAnim)) {
+                       updatingCurrAnim = true;
+                   }
                    temp = curr;
                    allObjects.remove(curr);
                    curr = null;
@@ -187,10 +192,16 @@ public class GameBoard extends JPanel implements ActionListener{
                    else {
                        ((Enemy)temp).getBoundingBox().setSize(width, height);
                    }
+                   if (updatingCurrAnim) {
+                       currAnim = (DrawnObject) temp;
+                   }
                    allObjects.add((DrawnObject)temp);
                }
                else if (temp instanceof Platform){
                    ((DrawnObject)temp).getBoundingBox().setSize(width, height);
+                   if (updatingCurrAnim) {
+                       currAnim = (DrawnObject) temp;
+                   }
                    allObjects.add((DrawnObject)temp);
                }
                else {
@@ -202,6 +213,9 @@ public class GameBoard extends JPanel implements ActionListener{
                        ((Effect)temp).setEffect(false);
                    }
                    ((Effect)temp).setCost(Math.abs(Integer.parseInt(costTextField.getText()))); //Math.abs to control for if they put in a negative number for the penalty
+                   if (updatingCurrAnim) {
+                       currAnim = (DrawnObject) temp;
+                   }
                    allObjects.add((DrawnObject)temp);
                }
                dialog.setVisible(false);
@@ -244,16 +258,40 @@ public class GameBoard extends JPanel implements ActionListener{
         for (DrawnObject obj : allObjects) {
             Rectangle b = obj.getBoundingBox();
             if (obj instanceof Enemy) {
+                if (!mode && obj.equals(currAnim) && editorMode == 2) {
+                    g2d.setColor(Color.white);
+                    g2d.fillOval((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
+                    g2d.setColor(Color.gray);
+                    g2d.drawOval((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
+                }
                 g2d.setColor(Color.red);
                 g2d.fillOval((int) b.getX(), (int) b.getY(), (int) b.getWidth(), (int) b.getHeight());
+
             }
             else if (obj instanceof Platform) {
+                if (!mode && obj.equals(currAnim) && editorMode == 2) {
+                    g2d.setColor(Color.white);
+                    g2d.fillRect((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
+                    g2d.setColor(Color.gray);
+                    g2d.drawRect((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
+                }
                 g2d.setColor(new Color(150, 75, 0)); //brown
                 g2d.fillRect((int) b.getX(), (int) b.getY(), (int) b.getWidth(), (int) b.getHeight());
+
             }
             else if (obj instanceof Effect) {
                 Effect e = (Effect) obj;
                 if (e.getVisible()) {
+                    if (!mode && obj.equals(currAnim) && editorMode == 2) {
+                        g2d.setColor(Color.white);
+                        //bottom left, bottom right, top midpoint
+                        int[] xPoints = new int[] {(int)b.getX() - 5, (int)(b.getX() + b.getWidth() + 5), (int)(b.getX() + (b.getWidth()/2.0))};
+                        int[] yPoints = new int[] {(int)(b.getY() + b.getHeight() + 5), (int)(b.getY() + b.getHeight() + 5), (int)b.getY() - 5};
+                        g2d.fillPolygon(xPoints, yPoints, 3);
+                        g2d.setColor(Color.gray);
+                        g2d.drawPolygon(xPoints, yPoints, 3);
+                    }
+
                     if (e.getEffect()) {
                         g2d.setColor(Color.yellow);
                     } else {
@@ -265,6 +303,7 @@ public class GameBoard extends JPanel implements ActionListener{
                     int[] yPoints = new int[] {(int)(b.getY() + b.getHeight()), (int)(b.getY() + b.getHeight()), (int)b.getY()};
                     g2d.fillPolygon(xPoints, yPoints, 3);
                 }
+
             }
         }
 
@@ -421,8 +460,8 @@ public class GameBoard extends JPanel implements ActionListener{
 
     private class MousePressReleaseListener implements MouseListener {
 	    public void mousePressed(MouseEvent e) {
-            if (!mode) {
-                if (e.isControlDown()) {
+            if (!mode) { //author mode
+                if (e.isControlDown()) { //open dialog box
                     //check if the control click is on a shape
                     currPoint = e.getPoint();
                     if (allObjects.size() > 0) {
@@ -502,9 +541,29 @@ public class GameBoard extends JPanel implements ActionListener{
                             }
                         }
                     }
-                } else if (editorMode == 2 && curr != null) {
+                } else if (editorMode == 2 && currAnim == null) {
                     // mouse press to start drawing an animation object
                     // associated with the curr object
+                    currPoint = e.getPoint();
+                    if (allObjects.size() > 0) {
+                        for (DrawnObject obj : allObjects) {
+                            if (within(obj, e.getPoint())) {
+                                currAnim = obj;
+                                return;
+                            }
+                        }
+                    }
+                } else if (editorMode == 2 && currAnim != null) {
+                    currPoint = e.getPoint();
+                    if (allObjects.size() > 0) {
+                        for (DrawnObject obj : allObjects) {
+                            if (within(obj, e.getPoint()) && !obj.equals(currAnim)) {
+                                currAnim = obj;
+                                return;
+                            }
+                        }
+                    }
+                    currentStroke = new ArrayList<>();
                 }
             }
         }
@@ -566,7 +625,7 @@ public class GameBoard extends JPanel implements ActionListener{
             if (!mode && editorMode == 0) {
                 currentStroke.add(e.getPoint());
                 repaint();
-            } else if (!mode && curr != null) {
+            } else if (!mode && editorMode == 1 && curr != null) {
                 // mouse dragging for moving objects, !editorMode implied
                 dragging = true;
                 // work off of curr value
