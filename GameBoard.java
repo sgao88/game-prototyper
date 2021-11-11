@@ -22,6 +22,7 @@ public class GameBoard extends JPanel implements ActionListener{
     int boundaryX;
     boolean draggingAndScrolling;
     boolean jumping;
+    dollar.Result lastAnimStroke;
 
     JDialog dialog;
     JPanel fieldPanel;
@@ -607,6 +608,47 @@ public class GameBoard extends JPanel implements ActionListener{
                 curr = null;
                 currPoint = null;
                 repaint();
+            } else if (!mode && editorMode == 2 && currentStroke != null) {
+                dollar.Result r = dr.recognize(currentStroke);
+                if (r.getMatchedTemplate() != null) {
+                    String name = r.getName();
+                    //act on whatever the recognized template is
+                    if (name.equals("right square bracket")) { //forward motion
+                        if (lastAnimStroke.getName().equals("left square bracket") && lastAnimStroke.getBoundingBox().getX() < r.getBoundingBox().getX()) {
+                            System.out.println("Back and forth motion");
+                        } else {
+                            System.out.println("Forward motion");
+                        }
+                        lastAnimStroke = r;
+                    } else if (name.equals("left square bracket")) { //backward motion
+                        if (lastAnimStroke.getName().equals("right square bracket") && lastAnimStroke.getBoundingBox().getX() > r.getBoundingBox().getX()) {
+                            System.out.println("Back and forth motion");
+                        } else {
+                            System.out.println("Backward motion");
+                        }
+                        lastAnimStroke = r;
+                    } else if (name.equals("circle")) { //rotation
+                        System.out.println("Rotation");
+                        lastAnimStroke = r;
+                    } else if (name.equals("caret")) { //dropping from current location
+                        if (lastAnimStroke.getName().equals("v") && lastAnimStroke.getBoundingBox().getY() > r.getBoundingBox().getY()) {
+                            System.out.println("Up and Down motion between the caret and v");
+                        } else {
+                            System.out.println("Dropping from current location");
+                        }
+                        lastAnimStroke = r;
+                    } else if (name.equals("v")) {
+                        if (lastAnimStroke.getName().equals("caret") && lastAnimStroke.getBoundingBox().getY() < r.getBoundingBox().getY()) {
+                            System.out.println("Up and Down motion between the caret and v");
+                        }
+                        lastAnimStroke = r;
+                    } else if (name.equals("x")) {
+                        lastAnimStroke = r;
+                        System.out.println("Clear animation for this shape");
+                    }
+                }
+                currentStroke = null;
+                repaint();
             }
         }
 
@@ -662,6 +704,9 @@ public class GameBoard extends JPanel implements ActionListener{
                     curr.move(xDiff);
                 }
                 curr.moveY(yDiff);
+                repaint();
+            } else if (!mode && editorMode == 2 && currentStroke != null) {
+                currentStroke.add(e.getPoint());
                 repaint();
             }
         }

@@ -81,8 +81,6 @@ public class Game implements ActionListener{
 				newEnemyButton.setVisible(true);
 				newRewardButton.setVisible(true);
 				newPenaltyButton.setVisible(true);
-				System.out.println("1gameboard's mode is " + gameBoard.getMode());
-				System.out.println("1gameboard's editormode is " + gameBoard.getEditorMode());
 			}
 		});
 		playModeMenuItem.addActionListener(new ActionListener() {
@@ -97,30 +95,22 @@ public class Game implements ActionListener{
 				newPenaltyButton.setVisible(false);
 				gameModeLabel.setText("PLAY");
 				scoreLabel.setVisible(true);
-				System.out.println("2gameboard's mode is " + gameBoard.getMode());
-				System.out.println("2gameboard's editormode is " + gameBoard.getEditorMode());
 			}
 		});
 
 		drawingModeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent c) {
 				toggleEditorMode(0);
-				System.out.println("3gameboard's mode is " + gameBoard.getMode());
-				System.out.println("3gameboard's editormode is " + gameBoard.getEditorMode());
 			}
 		});
 		draggingModeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent c) {
 				toggleEditorMode(1);
-				System.out.println("4gameboard's mode is " + gameBoard.getMode());
-				System.out.println("4gameboard's editormode is " + gameBoard.getEditorMode());
 			}
 		});
 		animatingModeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent c) {
 				toggleEditorMode(2);
-				System.out.println("5gameboard's mode is " + gameBoard.getMode());
-				System.out.println("5gameboard's editormode is " + gameBoard.getEditorMode());
 			}
 		});
 
