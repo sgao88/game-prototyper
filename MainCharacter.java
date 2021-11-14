@@ -1,7 +1,4 @@
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
 
 public class MainCharacter {
     int x, dx; //current x coordinate and change in x that needs to happen

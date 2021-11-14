@@ -22,7 +22,7 @@ public class GameBoard extends JPanel implements ActionListener{
     int boundaryX;
     boolean draggingAndScrolling;
     boolean jumping;
-    dollar.Result lastAnimStroke;
+    boolean animationIncrement;
 
     JDialog dialog;
     JPanel fieldPanel;
@@ -248,7 +248,9 @@ public class GameBoard extends JPanel implements ActionListener{
                 character.moveY(-1);
             }
         }
+        animationIncrement = true;
 	    repaint();
+        animationIncrement = false;
     }
 
     public void paint(Graphics g) {
@@ -257,6 +259,11 @@ public class GameBoard extends JPanel implements ActionListener{
 
         //draw the enemies, platforms, and effects (doesn't matter what mode we're in)
         for (DrawnObject obj : allObjects) {
+            // this animation step should only run if animationIncrement is true,
+            // which only activates in the timer-triggered actionPerformed() method
+            if (obj.hasAnimation() && mode) {
+                obj.step();
+            }
             Rectangle b = obj.getBoundingBox();
             if (obj instanceof Enemy) {
                 if (!mode && obj.equals(currAnim) && editorMode == 2) {
@@ -370,12 +377,11 @@ public class GameBoard extends JPanel implements ActionListener{
 	                int cost = ((Effect)obj).getCost();
 	                if (isReward) {
 	                    score += cost;
-	                    System.out.println("New score is " + score);
                     }
 	                else {
 	                    score -= cost;
-	                    System.out.println("New score is " + score);
                     }
+                    System.out.println("New score is " + score);
                 }
 	            else if (canMove && (obj instanceof Platform || obj instanceof Enemy)) {
                     if (isGravity && !jumping) {
@@ -614,37 +620,55 @@ public class GameBoard extends JPanel implements ActionListener{
                     String name = r.getName();
                     //act on whatever the recognized template is
                     if (name.equals("right square bracket")) { //forward motion
-                        if (lastAnimStroke.getName().equals("left square bracket") && lastAnimStroke.getBoundingBox().getX() < r.getBoundingBox().getX()) {
+                        currAnim.setHasAnimation(true);
+                        currAnim.getMotionTypes()[1] = true;
+                        currAnim.getEndpoints()[1] = r.getBoundingBox().getLocation();
+                        if (currAnim.getMotionTypes()[0]) {
+                            currAnim.calculateLR();
                             System.out.println("Back and forth motion");
                         } else {
+                            currAnim.calculateX(r.getBoundingBox().getLocation(), 1);
                             System.out.println("Forward motion");
                         }
-                        lastAnimStroke = r;
                     } else if (name.equals("left square bracket")) { //backward motion
-                        if (lastAnimStroke.getName().equals("right square bracket") && lastAnimStroke.getBoundingBox().getX() > r.getBoundingBox().getX()) {
+                        currAnim.setHasAnimation(true);
+                        currAnim.getMotionTypes()[0] = true;
+                        currAnim.getEndpoints()[0] = r.getBoundingBox().getLocation();
+                        if (currAnim.getMotionTypes()[1]) {
+                            currAnim.calculateLR();
                             System.out.println("Back and forth motion");
                         } else {
+                            currAnim.calculateX(r.getBoundingBox().getLocation(), 0);
                             System.out.println("Backward motion");
                         }
-                        lastAnimStroke = r;
                     } else if (name.equals("circle")) { //rotation
+                        currAnim.setHasAnimation(true);
                         System.out.println("Rotation");
-                        lastAnimStroke = r;
-                    } else if (name.equals("caret")) { //dropping from current location
-                        if (lastAnimStroke.getName().equals("v") && lastAnimStroke.getBoundingBox().getY() > r.getBoundingBox().getY()) {
+                    } else if (name.equals("caret")) { //going up from current location
+                        currAnim.setHasAnimation(true);
+                        currAnim.getMotionTypes()[2] = true;
+                        currAnim.getEndpoints()[2] = r.getBoundingBox().getLocation();
+                        if (currAnim.getMotionTypes()[3]) {
+                            currAnim.calculateUD();
                             System.out.println("Up and Down motion between the caret and v");
                         } else {
+                            currAnim.calculateY(r.getBoundingBox().getLocation(), 2);
+                            System.out.println("Going up from current location");
+                        }
+                    } else if (name.equals("v")) { // dropping
+                        currAnim.setHasAnimation(true);
+                        currAnim.getMotionTypes()[3] = true;
+                        currAnim.getEndpoints()[3] = r.getBoundingBox().getLocation();
+                        if (currAnim.getMotionTypes()[2]) {
+                            currAnim.calculateUD();
+                            System.out.println("Up and Down motion between the caret and v");
+                        } else {
+                            currAnim.calculateY(r.getBoundingBox().getLocation(), 3);
                             System.out.println("Dropping from current location");
                         }
-                        lastAnimStroke = r;
-                    } else if (name.equals("v")) {
-                        if (lastAnimStroke.getName().equals("caret") && lastAnimStroke.getBoundingBox().getY() < r.getBoundingBox().getY()) {
-                            System.out.println("Up and Down motion between the caret and v");
-                        }
-                        lastAnimStroke = r;
-                    } else if (name.equals("x")) {
-                        lastAnimStroke = r;
+                    } else if (name.equals("x")) { // clearing
                         System.out.println("Clear animation for this shape");
+                        currAnim.clearAnimation();
                     }
                 }
                 currentStroke = null;
