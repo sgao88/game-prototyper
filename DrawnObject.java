@@ -153,10 +153,5 @@ public abstract class DrawnObject {
                 currentMotionDistances[1] = (int) magicNumber;
             }
         }
-
-        if (motionTypes[6]) {
-            // rotation
-            System.out.println("DO rotation");
-        }
     }
 }

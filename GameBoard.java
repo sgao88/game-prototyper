@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
 import java.util.ArrayList;
+import java.awt.geom.AffineTransform;
 
 public class GameBoard extends JPanel implements ActionListener{
     MainCharacter character;
@@ -22,7 +23,7 @@ public class GameBoard extends JPanel implements ActionListener{
     int boundaryX;
     boolean draggingAndScrolling;
     boolean jumping;
-    boolean animationIncrement;
+    double angle = 0.0;
 
     JDialog dialog;
     JPanel fieldPanel;
@@ -248,9 +249,7 @@ public class GameBoard extends JPanel implements ActionListener{
                 character.moveY(-1);
             }
         }
-        animationIncrement = true;
 	    repaint();
-        animationIncrement = false;
     }
 
     public void paint(Graphics g) {
@@ -259,57 +258,108 @@ public class GameBoard extends JPanel implements ActionListener{
 
         //draw the enemies, platforms, and effects (doesn't matter what mode we're in)
         for (DrawnObject obj : allObjects) {
-            // this animation step should only run if animationIncrement is true,
-            // which only activates in the timer-triggered actionPerformed() method
+            boolean tempHasRotation = false;
+            Shape tempRotationImage = null;
             if (obj.hasAnimation() && mode) {
                 obj.step();
+                if (obj.getMotionTypes()[6]) {
+                    // has rotation
+                    System.out.println("object has rotation");
+                    tempHasRotation = true;
+                    tempRotationImage = rotate(obj);
+                }
             }
             Rectangle b = obj.getBoundingBox();
             if (obj instanceof Enemy) {
-                if (!mode && obj.equals(currAnim) && editorMode == 2) {
-                    g2d.setColor(Color.white);
-                    g2d.fillOval((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
-                    g2d.setColor(Color.gray);
-                    g2d.drawOval((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
+                if (tempHasRotation) {
+                    System.out.println("enemy rotation redraw");
+                    if (!mode && obj.equals(currAnim) && editorMode == 2) {
+                        g2d.setColor(Color.white);
+                        g2d.fillOval((int) tempRotationImage.getBounds().getX() - 5, (int) tempRotationImage.getBounds().getY() - 5, (int) tempRotationImage.getBounds().getWidth() + 10, (int) tempRotationImage.getBounds().getHeight() + 10);
+                        g2d.setColor(Color.gray);
+                        g2d.drawOval((int) tempRotationImage.getBounds().getX() - 5, (int) tempRotationImage.getBounds().getY() - 5, (int) tempRotationImage.getBounds().getWidth() + 10, (int) tempRotationImage.getBounds().getHeight() + 10);
+                    }
+                    g2d.setColor(Color.red);
+                    g2d.fillOval((int) tempRotationImage.getBounds().getX(), (int) tempRotationImage.getBounds().getY(), (int) tempRotationImage.getBounds().getWidth(), (int) tempRotationImage.getBounds().getHeight());
+                } else {
+                    if (!mode && obj.equals(currAnim) && editorMode == 2) {
+                        g2d.setColor(Color.white);
+                        g2d.fillOval((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
+                        g2d.setColor(Color.gray);
+                        g2d.drawOval((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
+                    }
+                    g2d.setColor(Color.red);
+                    g2d.fillOval((int) b.getX(), (int) b.getY(), (int) b.getWidth(), (int) b.getHeight());
                 }
-                g2d.setColor(Color.red);
-                g2d.fillOval((int) b.getX(), (int) b.getY(), (int) b.getWidth(), (int) b.getHeight());
-
             }
             else if (obj instanceof Platform) {
-                if (!mode && obj.equals(currAnim) && editorMode == 2) {
-                    g2d.setColor(Color.white);
-                    g2d.fillRect((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
-                    g2d.setColor(Color.gray);
-                    g2d.drawRect((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
+                if (tempHasRotation) {
+                    System.out.println("platform rotation redraw");
+                    if (!mode && obj.equals(currAnim) && editorMode == 2) {
+                        g2d.setColor(Color.white);
+                        g2d.fillOval((int) tempRotationImage.getBounds().getX() - 5, (int) tempRotationImage.getBounds().getY() - 5, (int) tempRotationImage.getBounds().getWidth() + 10, (int) tempRotationImage.getBounds().getHeight() + 10);
+                        g2d.setColor(Color.gray);
+                        g2d.drawOval((int) tempRotationImage.getBounds().getX() - 5, (int) tempRotationImage.getBounds().getY() - 5, (int) tempRotationImage.getBounds().getWidth() + 10, (int) tempRotationImage.getBounds().getHeight() + 10);
+                    }
+                    g2d.setColor(new Color(150, 75, 0)); //brown
+                    g2d.fill(tempRotationImage);
+                } else {
+                    if (!mode && obj.equals(currAnim) && editorMode == 2) {
+                        g2d.setColor(Color.white);
+                        g2d.fillRect((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
+                        g2d.setColor(Color.gray);
+                        g2d.drawRect((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
+                    }
+                    g2d.setColor(new Color(150, 75, 0)); //brown
+                    g2d.fillRect((int) b.getX(), (int) b.getY(), (int) b.getWidth(), (int) b.getHeight());
                 }
-                g2d.setColor(new Color(150, 75, 0)); //brown
-                g2d.fillRect((int) b.getX(), (int) b.getY(), (int) b.getWidth(), (int) b.getHeight());
-
             }
             else if (obj instanceof Effect) {
                 Effect e = (Effect) obj;
                 if (e.getVisible()) {
-                    if (!mode && obj.equals(currAnim) && editorMode == 2) {
-                        g2d.setColor(Color.white);
+                    if (tempHasRotation) {
+                        if (!mode && obj.equals(currAnim) && editorMode == 2) {
+                            g2d.setColor(Color.white);
+                            //bottom left, bottom right, top midpoint
+                            int[] xPoints = new int[] {(int)tempRotationImage.getBounds().getX() - 5, (int)(tempRotationImage.getBounds().getX() + tempRotationImage.getBounds().getWidth() + 5), (int)(tempRotationImage.getBounds().getX() + (tempRotationImage.getBounds().getWidth()/2.0))};
+                            int[] yPoints = new int[] {(int)(tempRotationImage.getBounds().getY() + tempRotationImage.getBounds().getHeight() + 5), (int)(tempRotationImage.getBounds().getY() + tempRotationImage.getBounds().getHeight() + 5), (int)tempRotationImage.getBounds().getY() - 5};
+                            g2d.fillPolygon(xPoints, yPoints, 3);
+                            g2d.setColor(Color.gray);
+                            g2d.drawPolygon(xPoints, yPoints, 3);
+                        }
+
+                        if (e.getEffect()) {
+                            g2d.setColor(Color.yellow);
+                        } else {
+                            g2d.setColor(Color.black);
+                        }
+
                         //bottom left, bottom right, top midpoint
-                        int[] xPoints = new int[] {(int)b.getX() - 5, (int)(b.getX() + b.getWidth() + 5), (int)(b.getX() + (b.getWidth()/2.0))};
-                        int[] yPoints = new int[] {(int)(b.getY() + b.getHeight() + 5), (int)(b.getY() + b.getHeight() + 5), (int)b.getY() - 5};
+                        int[] xPoints = new int[] {(int)tempRotationImage.getBounds().getX(), (int)(tempRotationImage.getBounds().getX() + tempRotationImage.getBounds().getWidth()), (int)(tempRotationImage.getBounds().getX() + (tempRotationImage.getBounds().getWidth()/2.0))};
+                        int[] yPoints = new int[] {(int)(tempRotationImage.getBounds().getY() + tempRotationImage.getBounds().getHeight()), (int)(tempRotationImage.getBounds().getY() + tempRotationImage.getBounds().getHeight()), (int)tempRotationImage.getBounds().getY()};
                         g2d.fillPolygon(xPoints, yPoints, 3);
-                        g2d.setColor(Color.gray);
-                        g2d.drawPolygon(xPoints, yPoints, 3);
-                    }
-
-                    if (e.getEffect()) {
-                        g2d.setColor(Color.yellow);
                     } else {
-                        g2d.setColor(Color.black);
-                    }
+                        if (!mode && obj.equals(currAnim) && editorMode == 2) {
+                            g2d.setColor(Color.white);
+                            //bottom left, bottom right, top midpoint
+                            int[] xPoints = new int[] {(int)b.getX() - 5, (int)(b.getX() + b.getWidth() + 5), (int)(b.getX() + (b.getWidth()/2.0))};
+                            int[] yPoints = new int[] {(int)(b.getY() + b.getHeight() + 5), (int)(b.getY() + b.getHeight() + 5), (int)b.getY() - 5};
+                            g2d.fillPolygon(xPoints, yPoints, 3);
+                            g2d.setColor(Color.gray);
+                            g2d.drawPolygon(xPoints, yPoints, 3);
+                        }
 
-                    //bottom left, bottom right, top midpoint
-                    int[] xPoints = new int[] {(int)b.getX(), (int)(b.getX() + b.getWidth()), (int)(b.getX() + (b.getWidth()/2.0))};
-                    int[] yPoints = new int[] {(int)(b.getY() + b.getHeight()), (int)(b.getY() + b.getHeight()), (int)b.getY()};
-                    g2d.fillPolygon(xPoints, yPoints, 3);
+                        if (e.getEffect()) {
+                            g2d.setColor(Color.yellow);
+                        } else {
+                            g2d.setColor(Color.black);
+                        }
+
+                        //bottom left, bottom right, top midpoint
+                        int[] xPoints = new int[] {(int)b.getX(), (int)(b.getX() + b.getWidth()), (int)(b.getX() + (b.getWidth()/2.0))};
+                        int[] yPoints = new int[] {(int)(b.getY() + b.getHeight()), (int)(b.getY() + b.getHeight()), (int)b.getY()};
+                        g2d.fillPolygon(xPoints, yPoints, 3);
+                    }
                 }
 
             }
@@ -327,6 +377,15 @@ public class GameBoard extends JPanel implements ActionListener{
                 g2d.drawLine((int)currentStroke.get(i).getX(), (int)currentStroke.get(i).getY(), (int)currentStroke.get(i + 1).getX(), (int)currentStroke.get(i + 1).getY());
             }
         }
+    }
+
+    private Shape rotate(DrawnObject o) {
+        System.out.println("rotate method");
+        AffineTransform tx = new AffineTransform();
+        angle += 0.05;
+        tx.rotate(angle, o.getBoundingBox().getX(), o.getBoundingBox().getY());
+        Shape newShape = tx.createTransformedShape(o.getBoundingBox());
+        return newShape;
     }
 
     public void setMode(boolean m) {
@@ -643,6 +702,7 @@ public class GameBoard extends JPanel implements ActionListener{
                         }
                     } else if (name.equals("circle")) { //rotation
                         currAnim.setHasAnimation(true);
+                        currAnim.getMotionTypes()[6] = true;
                         System.out.println("Rotation");
                     } else if (name.equals("caret")) { //going up from current location
                         currAnim.setHasAnimation(true);
