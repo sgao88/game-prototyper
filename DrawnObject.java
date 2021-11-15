@@ -76,7 +76,7 @@ public abstract class DrawnObject {
         motionTypes[2] = false;
         motionTypes[3] = false;
         motionTypes[5] = true;
-        motionDistances[5] = (int) (Math.abs(endpoints[3].getX() - endpoints[2].getX()) / magicNumber);
+        motionDistances[5] = (int) (Math.abs(endpoints[3].getY() - endpoints[2].getY()) / magicNumber);
         motionDistances[2] = 0;
         motionDistances[3] = 0;
         currentMotionDistances[1] = 5;
@@ -112,15 +112,12 @@ public abstract class DrawnObject {
     public void step() {
         if (motionTypes[0]) {
             // left only
-            System.out.println("DO left");
             move(motionDistances[0]);
         } else if (motionTypes[1]) {
             // right only
-            System.out.println("DO right");
             move(motionDistances[1]);
         } else if (motionTypes[4]) {
             // left-right
-            System.out.println("DO left-right");
             if (currentMotionDistances[0] > 0) {
                 // move right
                 move(motionDistances[4]);
@@ -136,21 +133,20 @@ public abstract class DrawnObject {
 
         if (motionTypes[2]) {
             // up only
-            System.out.println("DO up");
+            System.out.println("up");
             moveY(motionDistances[2]);
         } else if (motionTypes[3]) {
             // down only
-            System.out.println("DO down");
-            moveY(motionDistances[3]);
+            System.out.println("down");
+            moveY(-1 * motionDistances[3]);
         } else if (motionTypes[5]) {
             // up-down
-            System.out.println("DO up-down");
             if (currentMotionDistances[1] > 0) {
                 // move down
-                moveY(motionDistances[5]);
+                moveY(-1 * motionDistances[5]);
             } else {
                 // move up
-                moveY(-1 * motionDistances[5]);
+                moveY(motionDistances[5]);
             }
             currentMotionDistances[1]--;
             if (currentMotionDistances[1] == -29) {

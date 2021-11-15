@@ -614,7 +614,7 @@ public class GameBoard extends JPanel implements ActionListener{
                 curr = null;
                 currPoint = null;
                 repaint();
-            } else if (!mode && editorMode == 2 && currentStroke != null) {
+            } else if (!mode && editorMode == 2 && currentStroke != null && currentStroke.size() > 0) {
                 dollar.Result r = dr.recognize(currentStroke);
                 if (r.getMatchedTemplate() != null) {
                     String name = r.getName();
