@@ -1,7 +1,4 @@
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
 
 public class MainCharacter {
     int x, dx; //current x coordinate and change in x that needs to happen
@@ -42,7 +39,7 @@ public class MainCharacter {
 
     public void moveY(int dy) {
         int currY = (int)bounds.getY();
-        bounds.setLocation((int)bounds.getX(), currY - dy);
+        bounds.setLocation((int) bounds.getX(), currY - dy);
         setY(currY - dy);
     }
 }

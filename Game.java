@@ -7,7 +7,8 @@ public class Game implements ActionListener{
 	private JFrame frame;
 	private Timer time;
 	private boolean mode; //true == play mode, false == author mode
-	private boolean editorMode = true; // default true == drawing mode, false == dragging mode
+	//private boolean editorMode = true; // default true == drawing mode, false == dragging mode
+	private int editorMode; // 0 = drawing, 1 = dragging, 2 = animating
 	private JMenuBar menuBar;
 	private JMenu modeMenu;
 	private JRadioButtonMenuItem authorModeMenuItem;
@@ -80,8 +81,6 @@ public class Game implements ActionListener{
 				newEnemyButton.setVisible(true);
 				newRewardButton.setVisible(true);
 				newPenaltyButton.setVisible(true);
-				System.out.println("1gameboard's mode is " + gameBoard.getMode());
-				System.out.println("1gameboard's editormode is " + gameBoard.getEditorMode());
 			}
 		});
 		playModeMenuItem.addActionListener(new ActionListener() {
@@ -96,28 +95,22 @@ public class Game implements ActionListener{
 				newPenaltyButton.setVisible(false);
 				gameModeLabel.setText("PLAY");
 				scoreLabel.setVisible(true);
-				System.out.println("2gameboard's mode is " + gameBoard.getMode());
-				System.out.println("2gameboard's editormode is " + gameBoard.getEditorMode());
 			}
 		});
 
 		drawingModeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent c) {
-				toggleEditorMode();
-				System.out.println("3gameboard's mode is " + gameBoard.getMode());
-				System.out.println("3gameboard's editormode is " + gameBoard.getEditorMode());
+				toggleEditorMode(0);
 			}
 		});
 		draggingModeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent c) {
-				toggleEditorMode();
-				System.out.println("4gameboard's mode is " + gameBoard.getMode());
-				System.out.println("4gameboard's editormode is " + gameBoard.getEditorMode());
+				toggleEditorMode(1);
 			}
 		});
 		animatingModeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent c) {
-				System.out.println("Need to implement this action listener for the animation mode");
+				toggleEditorMode(2);
 			}
 		});
 
@@ -191,27 +184,18 @@ public class Game implements ActionListener{
 		if (mode) {
 			mode = false;
 			//toggle from play mode to author mode
-			gameBoard.setMode(mode);
 		}
 		else {
 			mode = true;
 			//toggle from author mode to play mode
-			gameBoard.setMode(mode);
 		}
+		gameBoard.setMode(mode);
 		frame.repaint();
 	}
 
-	private void toggleEditorMode() {
-		if (editorMode) {
-			editorMode = false;
-			//toggle from play mode to author mode
-			gameBoard.setEditorMode(editorMode);
-		}
-		else {
-			editorMode = true;
-			//toggle from author mode to play mode
-			gameBoard.setEditorMode(editorMode);
-		}
+	private void toggleEditorMode(int inputMode) {
+		editorMode = inputMode;
+		gameBoard.setEditorMode(inputMode);
 		frame.repaint();
 	}
 }
