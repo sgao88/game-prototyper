@@ -83,7 +83,14 @@ public abstract class DrawnObject {
     }
 
     public void calculateX(Point p, int index) {
-        motionDistances[index] = (int) (Math.abs(p.getX() - boundingBox.getX()) / magicNumber);
+        System.out.println("Called calculateX");
+        if (index == 0) { //left
+            motionDistances[0] = 1;
+        } else if (index == 1) { //right
+            motionDistances[1] = -1;
+        } else { //back and forth
+            motionDistances[index] = (int) (Math.abs(p.getX() - boundingBox.getX()) / magicNumber);
+        }
     }
 
     public void calculateY(Point p, int index) {

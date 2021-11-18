@@ -7,7 +7,6 @@ public class Game implements ActionListener{
 	private JFrame frame;
 	private Timer time;
 	private boolean mode; //true == play mode, false == author mode
-	//private boolean editorMode = true; // default true == drawing mode, false == dragging mode
 	private int editorMode; // 0 = drawing, 1 = dragging, 2 = animating
 	private JMenuBar menuBar;
 	private JMenu modeMenu;

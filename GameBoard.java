@@ -682,7 +682,7 @@ public class GameBoard extends JPanel implements ActionListener{
                         currAnim.setHasAnimation(true);
                         currAnim.getMotionTypes()[1] = true;
                         currAnim.getEndpoints()[1] = r.getBoundingBox().getLocation();
-                        if (currAnim.getMotionTypes()[0]) {
+                        if (currAnim.getMotionTypes()[0]) { //left motion also selected
                             currAnim.calculateLR();
                             System.out.println("Back and forth motion");
                         } else {
@@ -693,7 +693,7 @@ public class GameBoard extends JPanel implements ActionListener{
                         currAnim.setHasAnimation(true);
                         currAnim.getMotionTypes()[0] = true;
                         currAnim.getEndpoints()[0] = r.getBoundingBox().getLocation();
-                        if (currAnim.getMotionTypes()[1]) {
+                        if (currAnim.getMotionTypes()[1]) { //right motion also selected
                             currAnim.calculateLR();
                             System.out.println("Back and forth motion");
                         } else {
