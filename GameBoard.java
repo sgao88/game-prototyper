@@ -642,8 +642,11 @@ public class GameBoard extends JPanel implements ActionListener{
                             if (within(obj, e.getPoint())) {
                                 currAnim = obj;
                                 statusUpdate = "Object Selected for Animation";
-                                return;
+                                break;
                             }
+                        }
+                        if (currAnim == null) {
+                            statusUpdate = "Select an Object Before Drawing Animation";
                         }
                     }
                 } else if (editorMode == 2 && currAnim != null) {
@@ -688,6 +691,8 @@ public class GameBoard extends JPanel implements ActionListener{
                         Platform temp = new Platform(r.getBoundingBox());
                         allObjects.add(temp);
                         statusUpdate = "New Platform Added";
+                    } else {
+                        statusUpdate = "Shape Not Recognized. Please Redraw.";
                     }
                 }
                 currentStroke = null;
@@ -761,6 +766,8 @@ public class GameBoard extends JPanel implements ActionListener{
                     } else if (name.equals("x")) { // clearing
                         statusUpdate = "Animation Cleared";
                         currAnim.clearAnimation();
+                    } else {
+                        statusUpdate = "Animation Not Recognized. Please Redraw.";
                     }
                 }
                 currentStroke = null;
