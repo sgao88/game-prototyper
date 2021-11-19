@@ -12,6 +12,8 @@ public class Game implements ActionListener{
 	private JMenu modeMenu;
 	private JRadioButtonMenuItem authorModeMenuItem;
 	private JRadioButtonMenuItem playModeMenuItem;
+	private JLabel statusBar;
+	private JPanel gamePanel;
 	private JLabel gameModeLabel;
 	private ButtonGroup modeButtonGroup;
 	private JPanel sidePanel;
@@ -34,10 +36,14 @@ public class Game implements ActionListener{
 		authorModeMenuItem = new JRadioButtonMenuItem("Author", true);
 		playModeMenuItem = new JRadioButtonMenuItem("Play", false);
 		modeButtonGroup = new ButtonGroup();
+		statusBar = new JLabel("");
+		statusBar.setHorizontalAlignment(JLabel.CENTER);
+		gamePanel = new JPanel();
 
 		gameBoard = new GameBoard(mode, editorMode);
 		gameBoard.setSize(700, 300);
 		gameBoard.setPreferredSize(new Dimension(700, 300));
+		gameBoard.setMinimumSize(new Dimension(700, 300));
 
 		sidePanel = new JPanel();
 		sidePanel.setLayout(new BoxLayout(sidePanel, BoxLayout.Y_AXIS));
@@ -155,10 +161,13 @@ public class Game implements ActionListener{
 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setMinimumSize(new Dimension(900, 300));
-		frame.setLayout(new FlowLayout());
+		gamePanel.setLayout(new FlowLayout());
+		gamePanel.add(gameBoard);
+		gamePanel.add(sidePanel);
+		frame.setLayout(new BorderLayout());
 		frame.setJMenuBar(menuBar);
-		frame.add(gameBoard);
-		frame.add(sidePanel);
+		frame.add(gamePanel, BorderLayout.CENTER);
+		frame.add(statusBar, BorderLayout.SOUTH);
 		frame.pack();
 		frame.setVisible(true);
 
@@ -168,6 +177,7 @@ public class Game implements ActionListener{
 
 	public void actionPerformed(ActionEvent e) {
 		scoreLabel.setText("Score: " + gameBoard.getScore());
+		statusBar.setText("Status: " + gameBoard.getStatusUpdate());
 		frame.repaint();
 	}
 
@@ -183,10 +193,12 @@ public class Game implements ActionListener{
 		if (mode) {
 			mode = false;
 			//toggle from play mode to author mode
+			gameBoard.setStatusUpdate("Game Set To Author Mode");
 		}
 		else {
 			mode = true;
 			//toggle from author mode to play mode
+			gameBoard.setStatusUpdate("Game Set To Play Mode");
 		}
 		gameBoard.setMode(mode);
 		frame.repaint();

@@ -24,6 +24,7 @@ public class GameBoard extends JPanel implements ActionListener{
     boolean draggingAndScrolling;
     boolean jumping;
     double angle = 0.0;
+    String statusUpdate;
 
     JDialog dialog;
     JPanel fieldPanel;
@@ -57,6 +58,7 @@ public class GameBoard extends JPanel implements ActionListener{
         boundaryX = 680;
         draggingAndScrolling = false;
         jumping = false;
+        statusUpdate = "Game Opened in Author Mode";
 
         dialog = new JDialog();
         dialog.setLayout(new BorderLayout());
@@ -111,6 +113,7 @@ public class GameBoard extends JPanel implements ActionListener{
                 allObjects.remove(curr);
                 curr = null;
                 dialog.setVisible(false);
+                statusUpdate = "Deleted Shape";
                 repaint();
             }
         });
@@ -173,6 +176,7 @@ public class GameBoard extends JPanel implements ActionListener{
 
                    character.getBounds().setLocation(currX, currY - shift);
                    character.setY(currY - shift);
+                   statusUpdate = "Updated Main Character";
                }
                else if (temp instanceof Enemy) {
                    if (width != height) {
@@ -198,6 +202,7 @@ public class GameBoard extends JPanel implements ActionListener{
                        currAnim = (DrawnObject) temp;
                    }
                    allObjects.add((DrawnObject)temp);
+                   statusUpdate = "Updated Enemy Object";
                }
                else if (temp instanceof Platform){
                    ((DrawnObject)temp).getBoundingBox().setSize(width, height);
@@ -205,6 +210,7 @@ public class GameBoard extends JPanel implements ActionListener{
                        currAnim = (DrawnObject) temp;
                    }
                    allObjects.add((DrawnObject)temp);
+                   statusUpdate = "Updated Platform Object";
                }
                else {
                    ((DrawnObject)temp).getBoundingBox().setSize(width, height);
@@ -219,6 +225,7 @@ public class GameBoard extends JPanel implements ActionListener{
                        currAnim = (DrawnObject) temp;
                    }
                    allObjects.add((DrawnObject)temp);
+                   statusUpdate = "Updated Enemy Object";
                }
                dialog.setVisible(false);
                repaint();
@@ -245,7 +252,7 @@ public class GameBoard extends JPanel implements ActionListener{
     public void actionPerformed(ActionEvent e) {
 	    if (mode) { checkCollisions(true); }
         if (!jumping) {
-            if (character.getY() < 250) {
+            if (character.getY() < 240) {
                 character.moveY(-1);
             }
         }
@@ -390,13 +397,20 @@ public class GameBoard extends JPanel implements ActionListener{
 
     public void setMode(boolean m) {
 	    mode = m;
-        if (m = true) {
+        if (m) {
             this.requestFocus();
         }
     }
 
     public void setEditorMode(int m) {
         editorMode = m;
+        if (m == 0) {
+            statusUpdate = "Drawing Mode";
+        } else if (m == 1) {
+            statusUpdate = "Dragging Mode";
+        } else {
+            statusUpdate = "Animation Mode";
+        }
     }
 
     public boolean getMode() { return mode; }
@@ -405,22 +419,29 @@ public class GameBoard extends JPanel implements ActionListener{
 
     public int getScore() { return score; }
 
+    public void setStatusUpdate(String u) { statusUpdate = u; }
+
+    public String getStatusUpdate() { return statusUpdate; }
+
     public void addPlatform() {
 	    Rectangle boundingBox = new Rectangle(640, 240, 50, 50);
         Platform p = new Platform(boundingBox);
         allObjects.add(p);
+        statusUpdate = "New Platform Added";
     }
 
     public void addEnemy() {
         Rectangle boundingBox = new Rectangle(640, 240, 50, 50);
         Enemy e = new Enemy(boundingBox);
         allObjects.add(e);
+        statusUpdate = "New Enemy Added";
     }
 
     public void addEffect(boolean isReward) {
         Rectangle boundingBox = new Rectangle( 640, 240, 50, 50);
         Effect e = new Effect(boundingBox, isReward, 0);
         allObjects.add(e);
+        statusUpdate = "New Reward Added";
     }
 
     public void checkCollisions(boolean isGravity) {
@@ -436,17 +457,19 @@ public class GameBoard extends JPanel implements ActionListener{
 	                int cost = ((Effect)obj).getCost();
 	                if (isReward) {
 	                    score += cost;
+	                    statusUpdate = "Hit Reward! " + cost + " Points Added";
                     }
 	                else {
 	                    score -= cost;
+	                    statusUpdate = "Hit Penalty :( " + cost + " Points Lost";
                     }
-                    System.out.println("New score is " + score);
                 }
 	            else if (canMove && (obj instanceof Platform || obj instanceof Enemy)) {
                     if (isGravity && !jumping) {
                         character.setY(obj.getBoundingBox().y + character.getBounds().height + 1);
                     } else {
                         canMove = false;
+                        statusUpdate = "Blocked by an Object";
                     }
                 }
             }
@@ -567,6 +590,7 @@ public class GameBoard extends JPanel implements ActionListener{
                                 deleteButton.setBackground(Color.red);
                                 deleteButton.setForeground(Color.white);
                                 dialog.setVisible(true);
+                                statusUpdate = "Dialog Box Opened";
                                 repaint();
                             }
                         }
@@ -585,6 +609,7 @@ public class GameBoard extends JPanel implements ActionListener{
                         deleteButton.setBackground(Color.lightGray);
                         deleteButton.setForeground(Color.darkGray);
                         dialog.setVisible(true);
+                        statusUpdate = "Dialog Box Opened";
                         repaint();
                     }
                     currentStroke = new ArrayList<>();
@@ -602,6 +627,7 @@ public class GameBoard extends JPanel implements ActionListener{
                         for (DrawnObject obj : allObjects) {
                             if (within(obj, e.getPoint())) {
                                 // existing event drag
+                                statusUpdate = "Dragging Object";
                                 curr = obj;
                                 return;
                             }
@@ -615,6 +641,7 @@ public class GameBoard extends JPanel implements ActionListener{
                         for (DrawnObject obj : allObjects) {
                             if (within(obj, e.getPoint())) {
                                 currAnim = obj;
+                                statusUpdate = "Object Selected for Animation";
                                 return;
                             }
                         }
@@ -625,6 +652,7 @@ public class GameBoard extends JPanel implements ActionListener{
                         for (DrawnObject obj : allObjects) {
                             if (within(obj, e.getPoint()) && !obj.equals(currAnim)) {
                                 currAnim = obj;
+                                statusUpdate = "New Object Selected for Animation";
                                 return;
                             }
                         }
@@ -644,6 +672,7 @@ public class GameBoard extends JPanel implements ActionListener{
                     if (name.equals("triangle")) {
                         Effect temp = new Effect(r.getBoundingBox(), true, 0);
                         allObjects.add(temp);
+                        statusUpdate = "New Reward Added";
                     } else if (name.equals("circle")) {
                         Rectangle newBounds;
                         if (r.getBoundingBox().getWidth() >= r.getBoundingBox().getHeight()) {
@@ -654,9 +683,11 @@ public class GameBoard extends JPanel implements ActionListener{
                         }
                         Enemy temp = new Enemy(newBounds);
                         allObjects.add(temp);
+                        statusUpdate = "New Enemy Added";
                     } else if (name.equals("rectangle")) {
                         Platform temp = new Platform(r.getBoundingBox());
                         allObjects.add(temp);
+                        statusUpdate = "New Platform Added";
                     }
                 }
                 currentStroke = null;
@@ -672,6 +703,7 @@ public class GameBoard extends JPanel implements ActionListener{
                 curr.moveY(yDiff);
                 curr = null;
                 currPoint = null;
+                statusUpdate = "Dragging Completed";
                 repaint();
             } else if (!mode && editorMode == 2 && currentStroke != null && currentStroke.size() > 0) {
                 dollar.Result r = dr.recognize(currentStroke);
@@ -684,10 +716,10 @@ public class GameBoard extends JPanel implements ActionListener{
                         currAnim.getEndpoints()[1] = r.getBoundingBox().getLocation();
                         if (currAnim.getMotionTypes()[0]) { //left motion also selected
                             currAnim.calculateLR();
-                            System.out.println("Back and forth motion");
+                            statusUpdate = "Set Back And Forth Animation";
                         } else {
                             currAnim.calculateX(r.getBoundingBox().getLocation(), 1);
-                            System.out.println("Forward motion");
+                            statusUpdate = "Set Forward Animation";
                         }
                     } else if (name.equals("left square bracket")) { //backward motion
                         currAnim.setHasAnimation(true);
@@ -695,25 +727,25 @@ public class GameBoard extends JPanel implements ActionListener{
                         currAnim.getEndpoints()[0] = r.getBoundingBox().getLocation();
                         if (currAnim.getMotionTypes()[1]) { //right motion also selected
                             currAnim.calculateLR();
-                            System.out.println("Back and forth motion");
+                            statusUpdate = "Set Back and Forth Animation";
                         } else {
                             currAnim.calculateX(r.getBoundingBox().getLocation(), 0);
-                            System.out.println("Backward motion");
+                            statusUpdate = "Set Backward Animation";
                         }
                     } else if (name.equals("circle")) { //rotation
                         currAnim.setHasAnimation(true);
                         currAnim.getMotionTypes()[6] = true;
-                        System.out.println("Rotation");
+                        statusUpdate = "Set Rotation";
                     } else if (name.equals("caret")) { //going up from current location
                         currAnim.setHasAnimation(true);
                         currAnim.getMotionTypes()[2] = true;
                         currAnim.getEndpoints()[2] = r.getBoundingBox().getLocation();
                         if (currAnim.getMotionTypes()[3]) {
                             currAnim.calculateUD();
-                            System.out.println("Up and Down motion between the caret and v");
+                            statusUpdate = "Set Up and Down Animation";
                         } else {
                             currAnim.calculateY(r.getBoundingBox().getLocation(), 2);
-                            System.out.println("Going up from current location");
+                            statusUpdate = "Set Up Animation";
                         }
                     } else if (name.equals("v")) { // dropping
                         currAnim.setHasAnimation(true);
@@ -721,13 +753,13 @@ public class GameBoard extends JPanel implements ActionListener{
                         currAnim.getEndpoints()[3] = r.getBoundingBox().getLocation();
                         if (currAnim.getMotionTypes()[2]) {
                             currAnim.calculateUD();
-                            System.out.println("Up and Down motion between the caret and v");
+                            statusUpdate = "Set Up and Down Animation";
                         } else {
                             currAnim.calculateY(r.getBoundingBox().getLocation(), 3);
-                            System.out.println("Dropping from current location");
+                            statusUpdate = "Set Down Animation";
                         }
                     } else if (name.equals("x")) { // clearing
-                        System.out.println("Clear animation for this shape");
+                        statusUpdate = "Animation Cleared";
                         currAnim.clearAnimation();
                     }
                 }
@@ -750,6 +782,7 @@ public class GameBoard extends JPanel implements ActionListener{
 	    public void mouseDragged(MouseEvent e) {
             if (!mode && editorMode == 0) {
                 currentStroke.add(e.getPoint());
+                statusUpdate = "Drawing New Shape";
                 repaint();
             } else if (!mode && editorMode == 1 && curr != null) {
                 // mouse dragging for moving objects, !editorMode implied
@@ -788,9 +821,11 @@ public class GameBoard extends JPanel implements ActionListener{
                     curr.move(xDiff);
                 }
                 curr.moveY(yDiff);
+                statusUpdate = "Dragging Object";
                 repaint();
             } else if (!mode && editorMode == 2 && currentStroke != null) {
                 currentStroke.add(e.getPoint());
+                statusUpdate = "Drawing New Animation";
                 repaint();
             }
         }

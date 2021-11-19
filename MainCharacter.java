@@ -7,10 +7,11 @@ public class MainCharacter {
     Rectangle bounds;
 
     public MainCharacter() {
-        x = 30;
-        y = 270;
+        x = 10;
+        y = 240;
         radius = 50;
-        bounds = new Rectangle(x-(radius/2), y-(radius/2), radius, radius);
+        //bounds = new Rectangle(x-(radius/2), y-(radius/2), radius, radius);
+        bounds = new Rectangle(x, y, radius, radius);
     }
 
     public int getX() {
