@@ -8,6 +8,7 @@ import java.awt.geom.AffineTransform;
 public class GameBoard extends JPanel implements ActionListener{
     MainCharacter character;
     Timer time;
+    Timer animTime;
     boolean mode;
     int editorMode;
     dollar.DollarRecognizer dr;
@@ -110,10 +111,14 @@ public class GameBoard extends JPanel implements ActionListener{
         deleteButton.setForeground(Color.white);
         deleteButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent c) {
-                allObjects.remove(curr);
-                curr = null;
+                //allObjects.remove(curr);
+                //curr = null;
                 dialog.setVisible(false);
                 statusUpdate = "Deleted Shape";
+                Color start = curr.getColor();
+                Color end = Color.lightGray;
+                animTime = new Timer(5, new ColorChangeAnim(start, end));
+                animTime.start();
                 repaint();
             }
         });
@@ -286,7 +291,8 @@ public class GameBoard extends JPanel implements ActionListener{
                         g2d.setColor(Color.gray);
                         g2d.drawOval((int) tempRotationImage.getBounds().getX() - 5, (int) tempRotationImage.getBounds().getY() - 5, (int) tempRotationImage.getBounds().getWidth() + 10, (int) tempRotationImage.getBounds().getHeight() + 10);
                     }
-                    g2d.setColor(Color.red);
+                    //g2d.setColor(Color.red);
+                    g2d.setColor(obj.getColor());
                     g2d.fillOval((int) tempRotationImage.getBounds().getX(), (int) tempRotationImage.getBounds().getY(), (int) tempRotationImage.getBounds().getWidth(), (int) tempRotationImage.getBounds().getHeight());
                 } else {
                     if (!mode && obj.equals(currAnim) && editorMode == 2) {
@@ -295,7 +301,8 @@ public class GameBoard extends JPanel implements ActionListener{
                         g2d.setColor(Color.gray);
                         g2d.drawOval((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
                     }
-                    g2d.setColor(Color.red);
+                    //g2d.setColor(Color.red);
+                    g2d.setColor(obj.getColor());
                     g2d.fillOval((int) b.getX(), (int) b.getY(), (int) b.getWidth(), (int) b.getHeight());
                 }
             }
@@ -308,7 +315,8 @@ public class GameBoard extends JPanel implements ActionListener{
                         g2d.setColor(Color.gray);
                         g2d.drawOval((int) tempRotationImage.getBounds().getX() - 5, (int) tempRotationImage.getBounds().getY() - 5, (int) tempRotationImage.getBounds().getWidth() + 10, (int) tempRotationImage.getBounds().getHeight() + 10);
                     }
-                    g2d.setColor(new Color(150, 75, 0)); //brown
+                    //g2d.setColor(new Color(150, 75, 0)); //brown
+                    g2d.setColor(obj.getColor());
                     g2d.fill(tempRotationImage);
                 } else {
                     if (!mode && obj.equals(currAnim) && editorMode == 2) {
@@ -317,7 +325,8 @@ public class GameBoard extends JPanel implements ActionListener{
                         g2d.setColor(Color.gray);
                         g2d.drawRect((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
                     }
-                    g2d.setColor(new Color(150, 75, 0)); //brown
+                    //g2d.setColor(new Color(150, 75, 0)); //brown
+                    g2d.setColor(obj.getColor());
                     g2d.fillRect((int) b.getX(), (int) b.getY(), (int) b.getWidth(), (int) b.getHeight());
                 }
             }
@@ -356,11 +365,12 @@ public class GameBoard extends JPanel implements ActionListener{
                             g2d.drawPolygon(xPoints, yPoints, 3);
                         }
 
-                        if (e.getEffect()) {
-                            g2d.setColor(Color.yellow);
-                        } else {
-                            g2d.setColor(Color.black);
-                        }
+//                        if (e.getEffect()) {
+//                            g2d.setColor(Color.yellow);
+//                        } else {
+//                            g2d.setColor(Color.black);
+//                        }
+                        g2d.setColor(e.getColor());
 
                         //bottom left, bottom right, top midpoint
                         int[] xPoints = new int[] {(int)b.getX(), (int)(b.getX() + b.getWidth()), (int)(b.getX() + (b.getWidth()/2.0))};
@@ -426,6 +436,7 @@ public class GameBoard extends JPanel implements ActionListener{
     public void addPlatform() {
 	    Rectangle boundingBox = new Rectangle(640, 240, 50, 50);
         Platform p = new Platform(boundingBox);
+        p.setColor(new Color(150, 75, 0));
         allObjects.add(p);
         statusUpdate = "New Platform Added";
     }
@@ -433,6 +444,7 @@ public class GameBoard extends JPanel implements ActionListener{
     public void addEnemy() {
         Rectangle boundingBox = new Rectangle(640, 240, 50, 50);
         Enemy e = new Enemy(boundingBox);
+        e.setColor(Color.red);
         allObjects.add(e);
         statusUpdate = "New Enemy Added";
     }
@@ -440,6 +452,7 @@ public class GameBoard extends JPanel implements ActionListener{
     public void addEffect(boolean isReward) {
         Rectangle boundingBox = new Rectangle( 640, 240, 50, 50);
         Effect e = new Effect(boundingBox, isReward, 0);
+        e.setColor(Color.yellow);
         allObjects.add(e);
         statusUpdate = "New Reward Added";
     }
@@ -674,6 +687,7 @@ public class GameBoard extends JPanel implements ActionListener{
                     //act on whatever the recognized template is
                     if (name.equals("triangle")) {
                         Effect temp = new Effect(r.getBoundingBox(), true, 0);
+                        temp.setColor(Color.yellow);
                         allObjects.add(temp);
                         statusUpdate = "New Reward Added";
                     } else if (name.equals("circle")) {
@@ -685,10 +699,12 @@ public class GameBoard extends JPanel implements ActionListener{
                             newBounds = new Rectangle((int)r.getBoundingBox().getX(), (int)r.getBoundingBox().getY(), (int)r.getBoundingBox().getHeight(), (int)r.getBoundingBox().getHeight());
                         }
                         Enemy temp = new Enemy(newBounds);
+                        temp.setColor(Color.red);
                         allObjects.add(temp);
                         statusUpdate = "New Enemy Added";
                     } else if (name.equals("rectangle")) {
                         Platform temp = new Platform(r.getBoundingBox());
+                        temp.setColor(new Color(150, 75, 0));
                         allObjects.add(temp);
                         statusUpdate = "New Platform Added";
                     } else {
@@ -838,6 +854,50 @@ public class GameBoard extends JPanel implements ActionListener{
         }
 
         public void mouseMoved(MouseEvent e) {
+        }
+    }
+
+    public class ColorChangeAnim implements ActionListener {
+	    double steps[];
+	    int percentageDone = 0;
+	    Color start;
+	    Color end;
+
+	    public ColorChangeAnim(Color start, Color end) {
+	        this.start = start;
+	        this.end = end;
+	        steps = new double[]{(end.getRed() - start.getRed())/100.0, (end.getGreen() - start.getGreen())/100.0, (end.getBlue() - start.getBlue())/100.0};
+        }
+
+        public void actionPerformed(ActionEvent c) {
+            if (percentageDone == 100) {
+                allObjects.remove(curr);
+                curr = null;
+                animTime.stop();
+            } else {
+                double red = start.getRed() + (percentageDone * steps[0]);
+                double green = start.getGreen() + (percentageDone * steps[1]);
+                double blue = start.getBlue() + (percentageDone * steps[2]);
+
+                if (red < 0) {
+                    red = 0;
+                } else if (red > 255) {
+                    red = 255;
+                }
+                if (green < 0) {
+                    green = 0;
+                } else if (green > 255) {
+                    green = 255;
+                }
+                if (blue < 0) {
+                    blue = 0;
+                } else if (blue > 255) {
+                    blue = 255;
+                }
+                //System.out.println("Red: " + red + " Green: " + green + " Blue: " + blue);
+                curr.setColor(new Color((int)red, (int)green, (int)blue));
+                percentageDone += 1;
+            }
         }
     }
 }
