@@ -8,7 +8,7 @@ public class MainCharacter {
 
     public MainCharacter() {
         x = 10;
-        y = 240;
+        y = 238;
         radius = 50;
         //bounds = new Rectangle(x-(radius/2), y-(radius/2), radius, radius);
         bounds = new Rectangle(x, y, radius, radius);
