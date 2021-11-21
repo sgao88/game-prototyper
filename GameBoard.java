@@ -651,9 +651,17 @@ public class GameBoard extends JPanel implements ActionListener{
                     if (draggingAndScrolling) {
                         draggingAndScrolling = false;
                     }
-                    ((DrawnObject)curr).move(xDiff);
+                    points.get(0).setRect(points.get(0).getX() - xDiff, points.get(0).getY(), points.get(0).getWidth(), points.get(0).getHeight());
+                    points.get(1).setRect(points.get(1).getX() - xDiff, points.get(1).getY(), points.get(1).getWidth(), points.get(1).getHeight());
+                    points.get(2).setRect(points.get(2).getX() - xDiff, points.get(2).getY(), points.get(2).getWidth(), points.get(2).getHeight());
+                    points.get(3).setRect(points.get(3).getX() - xDiff, points.get(3).getY(), points.get(3).getWidth(), points.get(3).getHeight());
+                    //((DrawnObject)curr).move(xDiff);
                 }
-                ((DrawnObject)curr).moveY(yDiff);
+                //((DrawnObject)curr).moveY(yDiff);
+                points.get(0).setRect(points.get(0).getX(), points.get(0).getY() - yDiff, points.get(0).getWidth(), points.get(0).getHeight());
+                points.get(1).setRect(points.get(1).getX(), points.get(1).getY() - yDiff, points.get(1).getWidth(), points.get(1).getHeight());
+                points.get(2).setRect(points.get(2).getX(), points.get(2).getY() - yDiff, points.get(2).getWidth(), points.get(2).getHeight());
+                points.get(3).setRect(points.get(3).getX(), points.get(3).getY() - yDiff, points.get(3).getWidth(), points.get(3).getHeight());
                 statusUpdate = "Dragging Object";
                 repaint();
             }
