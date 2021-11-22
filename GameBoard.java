@@ -97,11 +97,10 @@ public class GameBoard extends JPanel implements ActionListener{
                         g2d.drawRect((int)b.getX(), (int)b.getY(), (int)b.getWidth(), (int)b.getHeight());
                     }
                     g2d.setColor(obj.getColor());
-                    g2d.fillOval((int) tempRotationImage.getBounds().getX(), (int) tempRotationImage.getBounds().getY(), (int) tempRotationImage.getBounds().getWidth(), (int) tempRotationImage.getBounds().getHeight());
-
-                    g2d.setColor(Color.black);
-                    g2d.fillRect((int) tempRotationImage.getBounds().getX(), (int) tempRotationImage.getBounds().getY(), 4, 4);
-                    g2d.draw(tempRotationImage);
+                    Point circleCenter = new Point((int)(obj.getBoundingBox().getX() + (obj.getBoundingBox().getWidth()/2.0)), (int)(obj.getBoundingBox().getY() + (obj.getBoundingBox().getHeight()/2.0)));
+                    Point rotationCenter = new Point((int)obj.getBoundingBox().getX(), (int)obj.getBoundingBox().getY());
+                    Point newCenter = rotatePoint(circleCenter, rotationCenter);
+                    g2d.fillOval((int)(newCenter.x - (obj.getBoundingBox().getWidth()/2.0)), (int)(newCenter.y - (obj.getBoundingBox().getY()/2.0)), (int)obj.getBoundingBox().getWidth(), (int)obj.getBoundingBox().getHeight());
                 } else {
                     if (curr != null && curr.equals(obj)) {
                         g2d.setColor(Color.gray);
