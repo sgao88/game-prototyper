@@ -277,12 +277,6 @@ public class GameBoard extends JPanel implements ActionListener{
 	    repaint();
     }
 
-//    public void bumpingAnimation(boolean type, DrawnObject obj) {
-//        animTime = new Timer(1, new bumpAnimation(20, type, obj));
-//        animTime.start();
-//        repaint();
-//    }
-
     public void checkCollisions(boolean isGravity) {
 	    Rectangle item;
 	    for (DrawnObject obj : allObjects) {
@@ -310,7 +304,6 @@ public class GameBoard extends JPanel implements ActionListener{
                         //canMove = false;
                         statusUpdate = "Blocked by a Platform";
                     }
-                    //bumpingAnimation(true, obj);
                     if (movementDirection == 1) {
                         for (DrawnObject obj1 : allObjects) {
                             obj1.move(-50);
@@ -327,7 +320,6 @@ public class GameBoard extends JPanel implements ActionListener{
                         //canMove = false;
                         statusUpdate = "Blocked by an Enemy";
                     }
-                    //bumpingAnimation(false, obj);
                     if (movementDirection == 1) {
                         obj.move(-50);
                     } else if (movementDirection == 0) {
@@ -425,7 +417,6 @@ public class GameBoard extends JPanel implements ActionListener{
                                 if (curr != null) {
                                     points = new ArrayList<>();
                                 }
-
                                 curr = obj;
                                 editorMode = -1;
                                 Rectangle b = ((DrawnObject)curr).getBoundingBox();
@@ -750,6 +741,7 @@ public class GameBoard extends JPanel implements ActionListener{
                     allObjects.remove(curr);
                 }
                 curr = null;
+                points = new ArrayList<>();
                 animTime.stop();
             } else {
                 double red = start.getRed() + (percentageDone * steps[0]);
@@ -777,35 +769,4 @@ public class GameBoard extends JPanel implements ActionListener{
             }
         }
     }
-
-//    public class bumpAnimation implements ActionListener {
-//        double steps[]; // length 7: increments .2, .4, .6, .7, .8, .9, 1.0
-//        int stepNum = 0;
-//        int distance;
-//        DrawnObject current;
-//        boolean isPlatform; // true = platform obj, false = enemy obj
-//
-//        public bumpAnimation(int distance, boolean objectType, DrawnObject obj) {
-//            this.distance = distance;
-//            this.isPlatform = objectType;
-//            current = obj;
-//            steps = new double[]{distance * .2, distance * .4, distance * .6, distance * .7, distance * .8, distance * .9, distance};
-//        }
-//
-//        public void actionPerformed(ActionEvent c) {
-//            if (stepNum == 7) {
-//                if (isPlatform) {
-//                    character.setX(character.getX() - 5);
-//                }
-//                curr = null;
-//                animTime.stop();
-//            } else {
-//                if (isPlatform) {
-//                    character.setX(character.getX() - 2);
-//                } else {
-//                    current.move((int) steps[stepNum] * -1);
-//                }
-//            }
-//        }
-//    }
 }
