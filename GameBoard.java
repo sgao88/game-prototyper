@@ -28,7 +28,7 @@ public class GameBoard extends JPanel implements ActionListener{
     double angle = 0.0;
     String statusUpdate;
     Object temp;
-    boolean movementDirection = true; // true = right, false = left
+    int movementDirection = -1; // 1 = right, 0 = left
 
 	public GameBoard(boolean mode, int editorMode) {
         character = new MainCharacter();
@@ -311,11 +311,11 @@ public class GameBoard extends JPanel implements ActionListener{
                         statusUpdate = "Blocked by a Platform";
                     }
                     //bumpingAnimation(true, obj);
-                    if (movementDirection) {
+                    if (movementDirection == 1) {
                         for (DrawnObject obj1 : allObjects) {
                             obj1.move(-50);
                         }
-                    } else {
+                    } else if (movementDirection == 0) {
                         for (DrawnObject obj1 : allObjects) {
                             obj1.move(50);
                         }
@@ -328,9 +328,9 @@ public class GameBoard extends JPanel implements ActionListener{
                         statusUpdate = "Blocked by an Enemy";
                     }
                     //bumpingAnimation(false, obj);
-                    if (movementDirection) {
+                    if (movementDirection == 1) {
                         obj.move(-50);
-                    } else {
+                    } else if (movementDirection == 0) {
                         obj.move(50);
                     }
                 }
@@ -362,15 +362,15 @@ public class GameBoard extends JPanel implements ActionListener{
             int key = e.getKeyCode();
             int dx = 0;
             int dy = 0;
-            if (key == KeyEvent.VK_LEFT && canMove) {
-                movementDirection = false;
+            if ((key == KeyEvent.VK_LEFT || movementDirection == 0) && canMove) {
+                movementDirection = 0;
                 dx = -4; //This can be changed to speed up/slow down game. Larger dx == faster scrolling
             }
-            else if (key == KeyEvent.VK_RIGHT && canMove) {
-                movementDirection = true;
+            else if ((key == KeyEvent.VK_RIGHT || movementDirection == 1) && canMove) {
+                movementDirection = 1;
                 dx = 4;
             }
-            if (key == KeyEvent.VK_UP && canMove) {
+            if ((key == KeyEvent.VK_UP || jumping) && canMove) {
                 jumping = true;
                 dy = 10;
             }
@@ -387,8 +387,10 @@ public class GameBoard extends JPanel implements ActionListener{
             int dy = 0;
             if (key == KeyEvent.VK_LEFT) {
                 dx = 0;
+                movementDirection = -1;
             } else if (key == KeyEvent.VK_RIGHT) {
                 dx = 0;
+                movementDirection = -1;
             }
             if (key == KeyEvent.VK_UP && canMove) {
                 jumping = false;
