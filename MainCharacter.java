@@ -7,10 +7,11 @@ public class MainCharacter {
     Rectangle bounds;
 
     public MainCharacter() {
-        x = 30;
-        y = 270;
+        x = 10;
+        y = 238;
         radius = 50;
-        bounds = new Rectangle(x-(radius/2), y-(radius/2), radius, radius);
+        //bounds = new Rectangle(x-(radius/2), y-(radius/2), radius, radius);
+        bounds = new Rectangle(x, y, radius, radius);
     }
 
     public int getX() {
@@ -41,5 +42,11 @@ public class MainCharacter {
         int currY = (int)bounds.getY();
         bounds.setLocation((int) bounds.getX(), currY - dy);
         setY(currY - dy);
+    }
+
+    public void moveX(int dx) {
+        int currX = (int)bounds.getX();
+        bounds.setLocation(currX - dx, (int) bounds.getY());
+        setX(currX - dx);
     }
 }

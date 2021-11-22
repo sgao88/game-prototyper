@@ -8,41 +8,28 @@ import java.awt.geom.AffineTransform;
 public class GameBoard extends JPanel implements ActionListener{
     MainCharacter character;
     Timer time;
+    Timer animTime;
     boolean mode;
-    int editorMode;
+    int editorMode; //0 = drawing, 1 = dragging, 2 == animating, 3 = dragging to resize
+    int resizeCorner = -1; //0 = top left, 1 = top right, 2 = bottom right, 3 = bottom left
     dollar.DollarRecognizer dr;
     ArrayList<Point2D> currentStroke;
     ArrayList<DrawnObject> allObjects;
     ArrayList<Effect> hitEffects;
+    ArrayList<Rectangle> points;
     boolean canMove;
     boolean dragging;
     Point currPoint;
-    DrawnObject curr;
-    DrawnObject currAnim;
+    Object curr;
     int score;
     int boundaryX;
     boolean draggingAndScrolling;
     boolean jumping;
     double angle = 0.0;
-
-    JDialog dialog;
-    JPanel fieldPanel;
-    JPanel widthPanel;
-    JLabel widthLabel;
-    JTextField widthInput;
-    JPanel heightPanel;
-    JLabel heightLabel;
-    JTextField heightInput;
-    JPanel radioButtonPanel;
-    ButtonGroup buttonGroup;
-    JRadioButton rewardButton;
-    JRadioButton penaltyButton;
-    JPanel costPanel;
-    JLabel costLabel;
-    JTextField costTextField;
-    JPanel buttonPanel;
-    JButton deleteButton;
-    JButton saveButton;
+    String statusUpdate;
+    Object temp;
+    int movementDirection = -1; // 1 = right, 0 = left
+    Point prevDraggingPoint;
 
 	public GameBoard(boolean mode, int editorMode) {
         character = new MainCharacter();
@@ -52,186 +39,13 @@ public class GameBoard extends JPanel implements ActionListener{
         currentStroke = null;
         allObjects = new ArrayList<>();
         hitEffects = new ArrayList<>();
+        points = new ArrayList<>();
         canMove = true;
         score = 0;
         boundaryX = 680;
         draggingAndScrolling = false;
         jumping = false;
-
-        dialog = new JDialog();
-        dialog.setLayout(new BorderLayout());
-        dialog.setMinimumSize(new Dimension(250, 300));
-
-        fieldPanel = new JPanel();
-        fieldPanel.setLayout(new BoxLayout(fieldPanel, BoxLayout.Y_AXIS));
-
-        widthPanel = new JPanel();
-        widthLabel = new JLabel("Width");
-        widthInput = new JTextField("xx", 5);
-        widthInput.setHorizontalAlignment(JTextField.CENTER);
-        widthPanel.add(widthLabel);
-        widthPanel.add(widthInput);
-        fieldPanel.add(widthPanel);
-
-        heightPanel = new JPanel();
-        heightLabel = new JLabel("Height");
-        heightInput = new JTextField("xx", 5);
-        heightInput.setHorizontalAlignment(JTextField.CENTER);
-        heightPanel.add(heightLabel);
-        heightPanel.add(heightInput);
-        fieldPanel.add(heightPanel);
-
-        radioButtonPanel = new JPanel();
-        rewardButton = new JRadioButton("Reward");
-        rewardButton.setSelected(true);
-        penaltyButton = new JRadioButton("Penalty");
-        buttonGroup = new ButtonGroup();
-        buttonGroup.add(rewardButton);
-        buttonGroup.add(penaltyButton);
-        radioButtonPanel.add(rewardButton);
-        radioButtonPanel.add(penaltyButton);
-        fieldPanel.add(radioButtonPanel);
-
-        costPanel = new JPanel();
-        costLabel = new JLabel("Cost");
-        costTextField = new JTextField("0", 5);
-        costTextField.setHorizontalAlignment(JTextField.CENTER);
-        costPanel.add(costLabel);
-        costPanel.add(costTextField);
-        fieldPanel.add(costPanel);
-
-        buttonPanel = new JPanel();
-        deleteButton = new JButton("Delete Shape");
-        deleteButton.setBackground(Color.red);
-        deleteButton.setOpaque(true);
-        deleteButton.setBorderPainted(false);
-        deleteButton.setForeground(Color.white);
-        deleteButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent c) {
-                allObjects.remove(curr);
-                curr = null;
-                dialog.setVisible(false);
-                repaint();
-            }
-        });
-
-        saveButton = new JButton("Save Changes");
-        saveButton.setBackground(Color.blue);
-        saveButton.setForeground(Color.white);
-        saveButton.setOpaque(true);
-        saveButton.setBorderPainted(false);
-        saveButton.addActionListener(new ActionListener() {
-           public void actionPerformed(ActionEvent c) {
-               Object temp;
-               boolean updatingCurrAnim = false;
-               if (curr != null) { //if curr is null, the main character should be updated
-                   if (curr.equals(currAnim)) {
-                       updatingCurrAnim = true;
-                   }
-                   temp = curr;
-                   allObjects.remove(curr);
-                   curr = null;
-               }
-               else {
-                   temp = character;
-               }
-               int width = (int)Double.parseDouble(widthInput.getText());
-               int height = (int)Double.parseDouble(heightInput.getText());
-               if (temp instanceof MainCharacter) {
-                   int shift;
-                   int currWidth = (int)character.getBounds().getWidth();
-                   int currHeight = (int)character.getBounds().getHeight();
-                   int currX = (int)character.getBounds().getX();
-                   int currY = (int)character.getBounds().getY();
-                   if (width != height) {
-                       if (width != currWidth && height == currHeight) { //width was changed
-                           shift = width - currWidth;
-                           character.getBounds().setSize(width, width);
-                           character.setRadius(width);
-                       }
-                       else if (height != currHeight && width == currWidth) {
-                           shift = height - currHeight;
-                           character.getBounds().setSize(height, height);
-                           character.setRadius(height);
-                       }
-                       else if (width > height) {
-                           shift = width - currWidth;
-                           character.getBounds().setSize(width, width);
-                           character.setRadius(width);
-                       }
-                       else {
-                           shift = height - currHeight;
-                           character.getBounds().setSize(height, height);
-                           character.setRadius(height);
-                       }
-                   }
-                   else {
-                       shift = width - currWidth;
-                       character.getBounds().setSize(width, height);
-                       character.setRadius(width);
-                   }
-
-                   character.getBounds().setLocation(currX, currY - shift);
-                   character.setY(currY - shift);
-               }
-               else if (temp instanceof Enemy) {
-                   if (width != height) {
-                       if (width != ((Enemy)temp).getBoundingBox().getWidth()
-                               && height == ((Enemy)temp).getBoundingBox().getHeight()) { //width was changed
-                           ((Enemy)temp).getBoundingBox().setSize(width, width);
-                       }
-                       else if (height != ((Enemy)temp).getBoundingBox().getHeight()
-                               && width == ((Enemy)temp).getBoundingBox().getWidth()) {
-                           ((Enemy)temp).getBoundingBox().setSize(height, height);
-                       }
-                       else if (width > height) {
-                           ((Enemy)temp).getBoundingBox().setSize(width, width);
-                       }
-                       else {
-                           ((Enemy)temp).getBoundingBox().setSize(height, height);
-                       }
-                   }
-                   else {
-                       ((Enemy)temp).getBoundingBox().setSize(width, height);
-                   }
-                   if (updatingCurrAnim) {
-                       currAnim = (DrawnObject) temp;
-                   }
-                   allObjects.add((DrawnObject)temp);
-               }
-               else if (temp instanceof Platform){
-                   ((DrawnObject)temp).getBoundingBox().setSize(width, height);
-                   if (updatingCurrAnim) {
-                       currAnim = (DrawnObject) temp;
-                   }
-                   allObjects.add((DrawnObject)temp);
-               }
-               else {
-                   ((DrawnObject)temp).getBoundingBox().setSize(width, height);
-                   if (rewardButton.isSelected()) {
-                       ((Effect)temp).setEffect(true);
-                   }
-                   else {
-                       ((Effect)temp).setEffect(false);
-                   }
-                   ((Effect)temp).setCost(Math.abs(Integer.parseInt(costTextField.getText()))); //Math.abs to control for if they put in a negative number for the penalty
-                   if (updatingCurrAnim) {
-                       currAnim = (DrawnObject) temp;
-                   }
-                   allObjects.add((DrawnObject)temp);
-               }
-               dialog.setVisible(false);
-               repaint();
-           }
-        });
-
-        buttonPanel.add(deleteButton);
-        buttonPanel.add(saveButton);
-        dialog.add(buttonPanel, BorderLayout.SOUTH);
-        dialog.add(fieldPanel, BorderLayout.CENTER);
-
-        dialog.setVisible(false);
-        dialog.pack();
+        statusUpdate = "Game Opened in Author Mode";
 
         this.addKeyListener(new KeyActionListener());
         this.addMouseListener(new MousePressReleaseListener());
@@ -245,7 +59,7 @@ public class GameBoard extends JPanel implements ActionListener{
     public void actionPerformed(ActionEvent e) {
 	    if (mode) { checkCollisions(true); }
         if (!jumping) {
-            if (character.getY() < 250) {
+            if (character.getY() < 238) {
                 character.moveY(-1);
             }
         }
@@ -264,7 +78,6 @@ public class GameBoard extends JPanel implements ActionListener{
                 obj.step();
                 if (obj.getMotionTypes()[6]) {
                     // has rotation
-                    System.out.println("object has rotation");
                     tempHasRotation = true;
                     tempRotationImage = rotate(obj);
                 }
@@ -272,45 +85,56 @@ public class GameBoard extends JPanel implements ActionListener{
             Rectangle b = obj.getBoundingBox();
             if (obj instanceof Enemy) {
                 if (tempHasRotation) {
-                    System.out.println("enemy rotation redraw");
-                    if (!mode && obj.equals(currAnim) && editorMode == 2) {
-                        g2d.setColor(Color.white);
-                        g2d.fillOval((int) tempRotationImage.getBounds().getX() - 5, (int) tempRotationImage.getBounds().getY() - 5, (int) tempRotationImage.getBounds().getWidth() + 10, (int) tempRotationImage.getBounds().getHeight() + 10);
+                    if (curr != null && curr.equals(obj)) {
                         g2d.setColor(Color.gray);
-                        g2d.drawOval((int) tempRotationImage.getBounds().getX() - 5, (int) tempRotationImage.getBounds().getY() - 5, (int) tempRotationImage.getBounds().getWidth() + 10, (int) tempRotationImage.getBounds().getHeight() + 10);
+                        double tempWidth = Math.abs(points.get(2).getCenterX() - points.get(0).getCenterX());
+                        double tempHeight = Math.abs(points.get(2).getCenterY() - points.get(0).getCenterY());
+                        if (tempWidth > tempHeight) {
+                            ((DrawnObject)curr).getBoundingBox().setRect(points.get(0).getCenterX(), points.get(0).getCenterY(), Math.abs(points.get(2).getCenterX() - points.get(0).getCenterX()), Math.abs(points.get(2).getCenterX() - points.get(0).getCenterX()));
+                        }
+                        else {
+                            ((DrawnObject)curr).getBoundingBox().setRect(points.get(0).getCenterX(), points.get(0).getCenterY(), Math.abs(points.get(2).getCenterY() - points.get(0).getCenterY()), Math.abs(points.get(2).getCenterY() - points.get(0).getCenterY()));
+                        }
+                        g2d.drawRect((int)b.getX(), (int)b.getY(), (int)b.getWidth(), (int)b.getHeight());
                     }
-                    g2d.setColor(Color.red);
-                    g2d.fillOval((int) tempRotationImage.getBounds().getX(), (int) tempRotationImage.getBounds().getY(), (int) tempRotationImage.getBounds().getWidth(), (int) tempRotationImage.getBounds().getHeight());
+                    g2d.setColor(obj.getColor());
+                    Point circleCenter = new Point((int)(obj.getBoundingBox().getX() + (obj.getBoundingBox().getWidth()/2.0)), (int)(obj.getBoundingBox().getY() + (obj.getBoundingBox().getHeight()/2.0)));
+                    Point rotationCenter = new Point((int)obj.getBoundingBox().getX(), (int)obj.getBoundingBox().getY());
+                    Point newCenter = rotatePoint(circleCenter, rotationCenter);
+                    g2d.fillOval((int)(newCenter.x - (obj.getBoundingBox().getWidth()/2.0)), (int)(newCenter.y - (obj.getBoundingBox().getY()/2.0)), (int)obj.getBoundingBox().getWidth(), (int)obj.getBoundingBox().getHeight());
                 } else {
-                    if (!mode && obj.equals(currAnim) && editorMode == 2) {
-                        g2d.setColor(Color.white);
-                        g2d.fillOval((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
+                    if (curr != null && curr.equals(obj)) {
                         g2d.setColor(Color.gray);
-                        g2d.drawOval((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
+                        double tempWidth = Math.abs(points.get(2).getCenterX() - points.get(0).getCenterX());
+                        double tempHeight = Math.abs(points.get(2).getCenterY() - points.get(0).getCenterY());
+                        if (tempWidth > tempHeight) {
+                            ((DrawnObject)curr).getBoundingBox().setRect(points.get(0).getCenterX(), points.get(0).getCenterY(), Math.abs(points.get(2).getCenterX() - points.get(0).getCenterX()), Math.abs(points.get(2).getCenterX() - points.get(0).getCenterX()));
+                        }
+                        else {
+                            ((DrawnObject)curr).getBoundingBox().setRect(points.get(0).getCenterX(), points.get(0).getCenterY(), Math.abs(points.get(2).getCenterY() - points.get(0).getCenterY()), Math.abs(points.get(2).getCenterY() - points.get(0).getCenterY()));
+                        }
+                        g2d.drawRect((int)b.getX(), (int)b.getY(), (int)b.getWidth(), (int)b.getHeight());
                     }
-                    g2d.setColor(Color.red);
+                    g2d.setColor(obj.getColor());
                     g2d.fillOval((int) b.getX(), (int) b.getY(), (int) b.getWidth(), (int) b.getHeight());
                 }
             }
             else if (obj instanceof Platform) {
                 if (tempHasRotation) {
-                    System.out.println("platform rotation redraw");
-                    if (!mode && obj.equals(currAnim) && editorMode == 2) {
-                        g2d.setColor(Color.white);
-                        g2d.fillOval((int) tempRotationImage.getBounds().getX() - 5, (int) tempRotationImage.getBounds().getY() - 5, (int) tempRotationImage.getBounds().getWidth() + 10, (int) tempRotationImage.getBounds().getHeight() + 10);
+                    if (curr != null && curr.equals(obj)) {
                         g2d.setColor(Color.gray);
-                        g2d.drawOval((int) tempRotationImage.getBounds().getX() - 5, (int) tempRotationImage.getBounds().getY() - 5, (int) tempRotationImage.getBounds().getWidth() + 10, (int) tempRotationImage.getBounds().getHeight() + 10);
+                        ((DrawnObject)curr).getBoundingBox().setRect(points.get(0).getCenterX(), points.get(0).getCenterY(), Math.abs(points.get(2).getCenterX() - points.get(0).getCenterX()), Math.abs(points.get(2).getCenterY() - points.get(0).getCenterY()));
+                        g2d.drawRect((int)b.getX(), (int)b.getY(), (int)b.getWidth(), (int)b.getHeight());
                     }
-                    g2d.setColor(new Color(150, 75, 0)); //brown
+                    g2d.setColor(obj.getColor());
                     g2d.fill(tempRotationImage);
                 } else {
-                    if (!mode && obj.equals(currAnim) && editorMode == 2) {
-                        g2d.setColor(Color.white);
-                        g2d.fillRect((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
+                    if (curr != null && curr.equals(obj)) {
                         g2d.setColor(Color.gray);
-                        g2d.drawRect((int) b.getX() - 5, (int) b.getY() - 5, (int) b.getWidth() + 10, (int) b.getHeight() + 10);
+                        ((DrawnObject)curr).getBoundingBox().setRect(points.get(0).getCenterX(), points.get(0).getCenterY(), Math.abs(points.get(2).getCenterX() - points.get(0).getCenterX()), Math.abs(points.get(2).getCenterY() - points.get(0).getCenterY()));
+                        g2d.drawRect((int)b.getX(), (int)b.getY(), (int)b.getWidth(), (int)b.getHeight());
                     }
-                    g2d.setColor(new Color(150, 75, 0)); //brown
+                    g2d.setColor(obj.getColor());
                     g2d.fillRect((int) b.getX(), (int) b.getY(), (int) b.getWidth(), (int) b.getHeight());
                 }
             }
@@ -318,43 +142,32 @@ public class GameBoard extends JPanel implements ActionListener{
                 Effect e = (Effect) obj;
                 if (e.getVisible()) {
                     if (tempHasRotation) {
-                        if (!mode && obj.equals(currAnim) && editorMode == 2) {
-                            g2d.setColor(Color.white);
-                            //bottom left, bottom right, top midpoint
-                            int[] xPoints = new int[] {(int)tempRotationImage.getBounds().getX() - 5, (int)(tempRotationImage.getBounds().getX() + tempRotationImage.getBounds().getWidth() + 5), (int)(tempRotationImage.getBounds().getX() + (tempRotationImage.getBounds().getWidth()/2.0))};
-                            int[] yPoints = new int[] {(int)(tempRotationImage.getBounds().getY() + tempRotationImage.getBounds().getHeight() + 5), (int)(tempRotationImage.getBounds().getY() + tempRotationImage.getBounds().getHeight() + 5), (int)tempRotationImage.getBounds().getY() - 5};
-                            g2d.fillPolygon(xPoints, yPoints, 3);
+                        if (curr != null && curr.equals(obj)) {
                             g2d.setColor(Color.gray);
-                            g2d.drawPolygon(xPoints, yPoints, 3);
+                            ((DrawnObject)curr).getBoundingBox().setRect(points.get(0).getCenterX(), points.get(0).getCenterY(), Math.abs(points.get(2).getCenterX() - points.get(0).getCenterX()), Math.abs(points.get(2).getCenterY() - points.get(0).getCenterY()));
+                            g2d.drawRect((int)b.getX(), (int)b.getY(), (int)b.getWidth(), (int)b.getHeight());
                         }
 
-                        if (e.getEffect()) {
-                            g2d.setColor(Color.yellow);
-                        } else {
-                            g2d.setColor(Color.black);
-                        }
-
+                        g2d.setColor(e.getColor());
+                        Point center = new Point((int)b.getX(), (int)b.getY());
+                        Point one = new Point((int)b.getX(), (int)(b.getY() + b.getHeight()));
+                        Point two = new Point((int)(b.getX() + b.getWidth()), (int)(b.getY() + b.getHeight()));
+                        Point three = new Point((int)(b.getX() + (b.getWidth()/2.0)), (int)b.getY());
+                        one = rotatePoint(one, center);
+                        two = rotatePoint(two, center);
+                        three = rotatePoint(three, center);
                         //bottom left, bottom right, top midpoint
-                        int[] xPoints = new int[] {(int)tempRotationImage.getBounds().getX(), (int)(tempRotationImage.getBounds().getX() + tempRotationImage.getBounds().getWidth()), (int)(tempRotationImage.getBounds().getX() + (tempRotationImage.getBounds().getWidth()/2.0))};
-                        int[] yPoints = new int[] {(int)(tempRotationImage.getBounds().getY() + tempRotationImage.getBounds().getHeight()), (int)(tempRotationImage.getBounds().getY() + tempRotationImage.getBounds().getHeight()), (int)tempRotationImage.getBounds().getY()};
+                        int[] xPoints = new int[] {one.x, two.x, three.x};
+                        int[] yPoints = new int[] {one.y, two.y, three.y};
                         g2d.fillPolygon(xPoints, yPoints, 3);
                     } else {
-                        if (!mode && obj.equals(currAnim) && editorMode == 2) {
-                            g2d.setColor(Color.white);
-                            //bottom left, bottom right, top midpoint
-                            int[] xPoints = new int[] {(int)b.getX() - 5, (int)(b.getX() + b.getWidth() + 5), (int)(b.getX() + (b.getWidth()/2.0))};
-                            int[] yPoints = new int[] {(int)(b.getY() + b.getHeight() + 5), (int)(b.getY() + b.getHeight() + 5), (int)b.getY() - 5};
-                            g2d.fillPolygon(xPoints, yPoints, 3);
+                        if (curr != null && curr.equals(obj)) {
                             g2d.setColor(Color.gray);
-                            g2d.drawPolygon(xPoints, yPoints, 3);
+                            ((DrawnObject)curr).getBoundingBox().setRect(points.get(0).getCenterX(), points.get(0).getCenterY(), Math.abs(points.get(2).getCenterX() - points.get(0).getCenterX()), Math.abs(points.get(2).getCenterY() - points.get(0).getCenterY()));
+                            g2d.drawRect((int)b.getX(), (int)b.getY(), (int)b.getWidth(), (int)b.getHeight());
                         }
 
-                        if (e.getEffect()) {
-                            g2d.setColor(Color.yellow);
-                        } else {
-                            g2d.setColor(Color.black);
-                        }
-
+                        g2d.setColor(e.getColor());
                         //bottom left, bottom right, top midpoint
                         int[] xPoints = new int[] {(int)b.getX(), (int)(b.getX() + b.getWidth()), (int)(b.getX() + (b.getWidth()/2.0))};
                         int[] yPoints = new int[] {(int)(b.getY() + b.getHeight()), (int)(b.getY() + b.getHeight()), (int)b.getY()};
@@ -365,7 +178,29 @@ public class GameBoard extends JPanel implements ActionListener{
             }
         }
 
+        g2d.setColor(Color.gray);
+        if (curr != null && !character.equals(curr)) {
+            for (Rectangle point : points) {
+                g2d.fillRect((int)point.getX(), (int)point.getY(), (int)point.getWidth(), (int)point.getHeight());
+            }
+        }
+        else if (points != null && points.size() > 0){
+            g2d.fillRect((int)points.get(1).getX(), (int)points.get(1).getY(), (int)points.get(1).getWidth(), (int)points.get(1).getHeight());
+        }
+
         //draw main character
+        if (curr != null && curr.equals(character)) {
+            g2d.setColor(Color.gray);
+            double tempWidth = Math.abs(points.get(2).getCenterX() - points.get(0).getCenterX());
+            double tempHeight = Math.abs(points.get(2).getCenterY() - points.get(0).getCenterY());
+            if (tempWidth > tempHeight) {
+                character.getBounds().setRect(points.get(0).getCenterX(), points.get(0).getCenterY(), Math.abs(points.get(2).getCenterX() - points.get(0).getCenterX()), Math.abs(points.get(2).getCenterX() - points.get(0).getCenterX()));
+            }
+            else {
+                character.getBounds().setRect(points.get(0).getCenterX(), points.get(0).getCenterY(), Math.abs(points.get(2).getCenterY() - points.get(0).getCenterY()), Math.abs(points.get(2).getCenterY() - points.get(0).getCenterY()));
+            }
+            g2d.drawRect((int)character.getBounds().getX(), (int)character.getBounds().getY(), (int)character.getBounds().getWidth(), (int)character.getBounds().getHeight());
+        }
         g2d.setColor(new Color(0, 100, 0));
         g2d.fillOval((int)character.getBounds().getX(), (int)character.getBounds().getY(), (int)character.getBounds().getWidth(), (int)character.getBounds().getHeight());
 
@@ -380,47 +215,81 @@ public class GameBoard extends JPanel implements ActionListener{
     }
 
     private Shape rotate(DrawnObject o) {
-        System.out.println("rotate method");
         AffineTransform tx = new AffineTransform();
-        angle += 0.05;
+        angle += (Math.PI/128);
         tx.rotate(angle, o.getBoundingBox().getX(), o.getBoundingBox().getY());
         Shape newShape = tx.createTransformedShape(o.getBoundingBox());
         return newShape;
     }
 
+    private Point rotatePoint(Point p, Point center) {
+        angle += 0.01;
+        int x = (int)(Math.cos(angle) * (p.x-center.x) - Math.sin(angle) * (p.y -  center.y) + center.x);
+        int y = (int)(Math.sin(angle) * (p.x - center.x) + Math.cos(angle) * (p.y - center.y) + center.y);
+        return new Point(x, y);
+    }
+
     public void setMode(boolean m) {
 	    mode = m;
-        if (m = true) {
+        if (m) {
             this.requestFocus();
         }
     }
 
-    public void setEditorMode(int m) {
-        editorMode = m;
-    }
-
-    public boolean getMode() { return mode; }
-
-    public int getEditorMode() { return editorMode; }
-
     public int getScore() { return score; }
 
+    public Object getSelectedObject() { return curr; }
+
+    public void setStatusUpdate(String u) { statusUpdate = u; }
+
+    public String getStatusUpdate() { return statusUpdate; }
+
     public void addPlatform() {
-	    Rectangle boundingBox = new Rectangle(640, 240, 50, 50);
+	    Rectangle boundingBox = new Rectangle(640, 238, 50, 50);
         Platform p = new Platform(boundingBox);
+        p.setColor(new Color(150, 75, 0));
         allObjects.add(p);
+        statusUpdate = "New Platform Added";
     }
 
     public void addEnemy() {
-        Rectangle boundingBox = new Rectangle(640, 240, 50, 50);
+        Rectangle boundingBox = new Rectangle(640, 238, 50, 50);
         Enemy e = new Enemy(boundingBox);
+        e.setColor(Color.red);
         allObjects.add(e);
+        statusUpdate = "New Enemy Added";
     }
 
     public void addEffect(boolean isReward) {
-        Rectangle boundingBox = new Rectangle( 640, 240, 50, 50);
+        Rectangle boundingBox = new Rectangle( 640, 238, 50, 50);
         Effect e = new Effect(boundingBox, isReward, 0);
+        e.setColor(Color.yellow);
         allObjects.add(e);
+        statusUpdate = "New Reward Added";
+    }
+
+    public void deleteShape(Object shape) {
+	    if (!(shape instanceof MainCharacter) && allObjects.contains((DrawnObject)shape)) {
+	        Color start = ((DrawnObject)shape).getColor();
+	        Color end = Color.gray;
+	        animTime = new Timer(5, new ColorChangeAnim(start, end, true));
+	        animTime.start();
+        }
+	    repaint();
+    }
+
+    public void switchEffect(Effect e) {
+        Color start = e.getColor();
+        Color end;
+	    if (e.getEffect()) {
+            end = Color.black;
+        }
+	    else {
+	        end = Color.yellow;
+        }
+	    animTime = new Timer(5, new ColorChangeAnim(start, end, false));
+	    animTime.start();
+	    repaint();
     }
 
     public void checkCollisions(boolean isGravity) {
@@ -436,17 +305,40 @@ public class GameBoard extends JPanel implements ActionListener{
 	                int cost = ((Effect)obj).getCost();
 	                if (isReward) {
 	                    score += cost;
+	                    statusUpdate = "Hit Reward! " + cost + " Points Added";
                     }
 	                else {
 	                    score -= cost;
+	                    statusUpdate = "Hit Penalty :( " + cost + " Points Lost";
                     }
-                    System.out.println("New score is " + score);
                 }
-	            else if (canMove && (obj instanceof Platform || obj instanceof Enemy)) {
+	            else if (canMove && (obj instanceof Platform)) {
                     if (isGravity && !jumping) {
                         character.setY(obj.getBoundingBox().y + character.getBounds().height + 1);
                     } else {
-                        canMove = false;
+                        //canMove = false;
+                        statusUpdate = "Blocked by a Platform";
+                    }
+                    if (movementDirection == 1) {
+                        for (DrawnObject obj1 : allObjects) {
+                            obj1.move(-50);
+                        }
+                    } else if (movementDirection == 0) {
+                        for (DrawnObject obj1 : allObjects) {
+                            obj1.move(50);
+                        }
+                    }
+                } else if (canMove && (obj instanceof Enemy)) {
+                    if (isGravity && !jumping) {
+                        character.setY(obj.getBoundingBox().y + character.getBounds().height + 1);
+                    } else {
+                        //canMove = false;
+                        statusUpdate = "Blocked by an Enemy";
+                    }
+                    if (movementDirection == 1) {
+                        obj.move(-50);
+                    } else if (movementDirection == 0) {
+                        obj.move(50);
                     }
                 }
             }
@@ -477,13 +369,15 @@ public class GameBoard extends JPanel implements ActionListener{
             int key = e.getKeyCode();
             int dx = 0;
             int dy = 0;
-            if (key == KeyEvent.VK_LEFT && canMove) {
+            if ((key == KeyEvent.VK_LEFT || movementDirection == 0) && canMove) {
+                movementDirection = 0;
                 dx = -4; //This can be changed to speed up/slow down game. Larger dx == faster scrolling
             }
-            else if (key == KeyEvent.VK_RIGHT && canMove) {
+            else if ((key == KeyEvent.VK_RIGHT || movementDirection == 1) && canMove) {
+                movementDirection = 1;
                 dx = 4;
             }
-            if (key == KeyEvent.VK_UP && canMove) {
+            if ((key == KeyEvent.VK_UP || jumping) && canMove) {
                 jumping = true;
                 dy = 10;
             }
@@ -500,8 +394,10 @@ public class GameBoard extends JPanel implements ActionListener{
             int dy = 0;
             if (key == KeyEvent.VK_LEFT) {
                 dx = 0;
+                movementDirection = -1;
             } else if (key == KeyEvent.VK_RIGHT) {
                 dx = 0;
+                movementDirection = -1;
             }
             if (key == KeyEvent.VK_UP && canMove) {
                 jumping = false;
@@ -527,115 +423,100 @@ public class GameBoard extends JPanel implements ActionListener{
     private class MousePressReleaseListener implements MouseListener {
 	    public void mousePressed(MouseEvent e) {
             if (!mode) { //author mode
-                if (e.isControlDown()) { //open dialog box
+                currPoint = e.getPoint();
+                if (e.isControlDown()) { //selecting a shape
                     //check if the control click is on a shape
-                    currPoint = e.getPoint();
                     if (allObjects.size() > 0) {
                         for (DrawnObject obj : allObjects) {
-                            if (within(obj, e.getPoint())) {
+                            if (within(obj, currPoint)) {
+                                if (curr != null) {
+                                    points = new ArrayList<>();
+                                }
                                 curr = obj;
-                                //open the dialog box
-                                widthInput.setText("" + obj.getBoundingBox().getWidth());
-                                heightInput.setText("" + obj.getBoundingBox().getHeight());
-                                if (obj instanceof Effect) {
-                                    if (((Effect)obj).getEffect()) {
-                                        rewardButton.setSelected(true);
-                                        penaltyButton.setSelected(false);
-                                    }
-                                    else {
-                                        rewardButton.setSelected(false);
-                                        penaltyButton.setSelected(true);
-                                    }
-                                    rewardButton.setEnabled(true);
-                                    penaltyButton.setEnabled(true);
-                                    rewardButton.setForeground(Color.black);
-                                    penaltyButton.setForeground(Color.black);
-                                    costTextField.setText("" + ((Effect)obj).getCost());
-                                    costTextField.setEnabled(true);
-                                    costLabel.setForeground(Color.black);
-                                }
-                                else {
-                                    rewardButton.setEnabled(false);
-                                    penaltyButton.setEnabled(false);
-                                    rewardButton.setForeground(Color.lightGray);
-                                    penaltyButton.setForeground(Color.lightGray);
-                                    costTextField.setText("0");
-                                    costTextField.setEnabled(false);
-                                    costLabel.setForeground(Color.lightGray);
-                                }
-                                deleteButton.setEnabled(true);
-                                deleteButton.setBackground(Color.red);
-                                deleteButton.setForeground(Color.white);
-                                dialog.setVisible(true);
-                                repaint();
+                                editorMode = -1;
+                                Rectangle b = ((DrawnObject)curr).getBoundingBox();
+                                Rectangle topLeftCorner = new Rectangle((int)b.getX() - 5, (int)b.getY() - 5, 10, 10);
+                                Rectangle topRightCorner = new Rectangle((int)b.getX()  + (int)b.getWidth() - 5, (int)b.getY() - 5, 10, 10);
+                                Rectangle bottomRightCorner = new Rectangle((int)b.getX() + (int)b.getWidth() - 5, (int)b.getY() + (int)b.getHeight() - 5, 10, 10);
+                                Rectangle bottomLeftCorner = new Rectangle((int)b.getX() - 5, (int)b.getY() + (int)b.getHeight() - 5, 10, 10);
+                                points.add(topLeftCorner);
+                                points.add(topRightCorner);
+                                points.add(bottomRightCorner);
+                                points.add(bottomLeftCorner);
+                                statusUpdate = "Object Selected";
                             }
                         }
                     }
-                    if (within(character, e.getPoint())) {
-                        widthInput.setText("" + character.getRadius());
-                        heightInput.setText("" + character.getRadius());
-                        rewardButton.setEnabled(false);
-                        penaltyButton.setEnabled(false);
-                        rewardButton.setForeground(Color.lightGray);
-                        penaltyButton.setForeground(Color.lightGray);
-                        costTextField.setText("0");
-                        costTextField.setEnabled(false);
-                        costLabel.setForeground(Color.lightGray);
-                        deleteButton.setEnabled(false);
-                        deleteButton.setBackground(Color.lightGray);
-                        deleteButton.setForeground(Color.darkGray);
-                        dialog.setVisible(true);
+                    if (within(character, currPoint)) {
+                        if (curr != null) {
+                            points = new ArrayList<>();
+                        }
+
+                        curr = character;
+                        editorMode = -1;
+                        Rectangle b = character.getBounds();
+                        Rectangle topLeftCorner = new Rectangle((int)b.getX() - 5, (int)b.getY() - 5, 10, 10);
+                        Rectangle topRightCorner = new Rectangle((int)b.getX()  + (int)b.getWidth() - 5, (int)b.getY() - 5, 10, 10);
+                        Rectangle bottomRightCorner = new Rectangle((int)b.getX() + (int)b.getWidth() - 5, (int)b.getY() + (int)b.getHeight() - 5, 10, 10);
+                        Rectangle bottomLeftCorner = new Rectangle((int)b.getX() - 5, (int)b.getY() + (int)b.getHeight() - 5, 10, 10);
+                        points.add(topLeftCorner);
+                        points.add(topRightCorner);
+                        points.add(bottomRightCorner);
+                        points.add(bottomLeftCorner);
+                        statusUpdate = "Main Character Selected";
+                    }
+                    repaint();
+                } else {
+                    if (curr != null) {
+                        if (points.get(0).contains(currPoint)) { //resizing
+                            statusUpdate = "Resizing Object";
+                            editorMode = 3;
+                            resizeCorner = 0;
+                            repaint();
+                        }
+                        else if (points.get(1).contains(currPoint)) {
+                            statusUpdate = "Resizing Object";
+                            editorMode = 3;
+                            resizeCorner = 1;
+                            repaint();
+                        }
+                        else if (points.get(2).contains(currPoint)) {
+                            statusUpdate = "Resizing Object";
+                            editorMode = 3;
+                            resizeCorner = 2;
+                            repaint();
+                        }
+                        else if (points.get(3).contains(currPoint)) {
+                            statusUpdate = "Resizing Object";
+                            editorMode = 3;
+                            resizeCorner = 3;
+                            repaint();
+                        }
+                        else if (!curr.equals(character) && within(curr, currPoint)){ //dragging
+                            statusUpdate = "Dragging Object";
+                            editorMode = 1;
+                            prevDraggingPoint = e.getPoint();
+                            repaint();
+                        }
+                        else { // animating
+                            editorMode = 2;
+                            currentStroke = new ArrayList<>();
+                            statusUpdate = "Drawing Animation";
+                            repaint();
+                        }
+                    } else {
+                        //drawing new shape
+                        editorMode = 0;
+                        currentStroke = new ArrayList<>();
+                        statusUpdate = "Drawing New Shape";
                         repaint();
                     }
-                    currentStroke = new ArrayList<>();
-                    repaint();
-                }
-                else if (editorMode == 0) {
-                    // drawing mode
-                    currentStroke = new ArrayList<>();
-                    repaint();
-                }
-                else if (editorMode == 1) {
-                    // mouse press to enter dragging object mode
-                    currPoint = e.getPoint();
-                    if (curr == null && allObjects.size() > 0) {
-                        for (DrawnObject obj : allObjects) {
-                            if (within(obj, e.getPoint())) {
-                                // existing event drag
-                                curr = obj;
-                                return;
-                            }
-                        }
-                    }
-                } else if (editorMode == 2 && currAnim == null) {
-                    // mouse press to start drawing an animation object
-                    // associated with the curr object
-                    currPoint = e.getPoint();
-                    if (allObjects.size() > 0) {
-                        for (DrawnObject obj : allObjects) {
-                            if (within(obj, e.getPoint())) {
-                                currAnim = obj;
-                                return;
-                            }
-                        }
-                    }
-                } else if (editorMode == 2 && currAnim != null) {
-                    currPoint = e.getPoint();
-                    if (allObjects.size() > 0) {
-                        for (DrawnObject obj : allObjects) {
-                            if (within(obj, e.getPoint()) && !obj.equals(currAnim)) {
-                                currAnim = obj;
-                                return;
-                            }
-                        }
-                    }
-                    currentStroke = new ArrayList<>();
                 }
             }
         }
 
         public void mouseReleased(MouseEvent e) {
-	        if (!mode && editorMode == 0 && currentStroke.size() > 0) {
+	        if (!mode && editorMode == 0 && currentStroke != null && currentStroke.size() > 0) {
                 //pass current stroke to the recognizer
                 dollar.Result r = dr.recognize(currentStroke);
                 if (r.getMatchedTemplate() != null) {
@@ -643,8 +524,11 @@ public class GameBoard extends JPanel implements ActionListener{
                     //act on whatever the recognized template is
                     if (name.equals("triangle")) {
                         Effect temp = new Effect(r.getBoundingBox(), true, 0);
+                        temp.setColor(Color.yellow);
                         allObjects.add(temp);
-                    } else if (name.equals("circle")) {
+                        statusUpdate = "New Reward Added";
+                    }
+                    else if (name.equals("circle")) {
                         Rectangle newBounds;
                         if (r.getBoundingBox().getWidth() >= r.getBoundingBox().getHeight()) {
                             newBounds = new Rectangle((int)r.getBoundingBox().getX(), (int)r.getBoundingBox().getY(), (int)r.getBoundingBox().getWidth(), (int)r.getBoundingBox().getWidth());
@@ -653,85 +537,107 @@ public class GameBoard extends JPanel implements ActionListener{
                             newBounds = new Rectangle((int)r.getBoundingBox().getX(), (int)r.getBoundingBox().getY(), (int)r.getBoundingBox().getHeight(), (int)r.getBoundingBox().getHeight());
                         }
                         Enemy temp = new Enemy(newBounds);
+                        temp.setColor(Color.red);
                         allObjects.add(temp);
-                    } else if (name.equals("rectangle")) {
+                        statusUpdate = "New Enemy Added";
+                    }
+                    else if (name.equals("rectangle")) {
                         Platform temp = new Platform(r.getBoundingBox());
+                        temp.setColor(new Color(150, 75, 0));
                         allObjects.add(temp);
+                        statusUpdate = "New Platform Added";
+                    }
+                    else {
+                        statusUpdate = "Shape Not Recognized. Please Redraw.";
                     }
                 }
                 currentStroke = null;
+                curr = null;
                 repaint();
-            } else if (!mode && editorMode == 1 && curr != null && dragging) {
-                // mouse released to exit dragging object mode
-                dragging = false;
+            }
+	        else if (!mode && editorMode == 1) {
                 currPoint = e.getPoint();
                 // final update for end location
-                int xDiff = curr.getBoundingBox().x - currPoint.x;
-                int yDiff = curr.getBoundingBox().y - currPoint.y;
-                curr.move(xDiff);
-                curr.moveY(yDiff);
+                int xDiff = prevDraggingPoint.x - currPoint.x;
+                int yDiff = prevDraggingPoint.y - currPoint.y;
+                ((DrawnObject)curr).move(xDiff);
+                ((DrawnObject)curr).moveY(yDiff);
                 curr = null;
-                currPoint = null;
+                points = new ArrayList<>();
+                statusUpdate = "Dragging Completed";
+                prevDraggingPoint = null;
                 repaint();
-            } else if (!mode && editorMode == 2 && currentStroke != null && currentStroke.size() > 0) {
+            }
+	        else if (!mode && editorMode == 2 && currentStroke != null && currentStroke.size() > 0) {
                 dollar.Result r = dr.recognize(currentStroke);
                 if (r.getMatchedTemplate() != null) {
                     String name = r.getName();
                     //act on whatever the recognized template is
                     if (name.equals("right square bracket")) { //forward motion
-                        currAnim.setHasAnimation(true);
-                        currAnim.getMotionTypes()[1] = true;
-                        currAnim.getEndpoints()[1] = r.getBoundingBox().getLocation();
-                        if (currAnim.getMotionTypes()[0]) {
-                            currAnim.calculateLR();
-                            System.out.println("Back and forth motion");
+                        ((DrawnObject)curr).setHasAnimation(true);
+                        ((DrawnObject)curr).getMotionTypes()[1] = true;
+                        ((DrawnObject)curr).getEndpoints()[1] = r.getBoundingBox().getLocation();
+                        if (((DrawnObject)curr).getMotionTypes()[0]) { //left motion also selected
+                            ((DrawnObject)curr).calculateLR();
+                            statusUpdate = "Set Back And Forth Animation";
                         } else {
-                            currAnim.calculateX(r.getBoundingBox().getLocation(), 1);
-                            System.out.println("Forward motion");
+                            ((DrawnObject)curr).calculateX(r.getBoundingBox().getLocation(), 1);
+                            statusUpdate = "Set Forward Animation";
                         }
                     } else if (name.equals("left square bracket")) { //backward motion
-                        currAnim.setHasAnimation(true);
-                        currAnim.getMotionTypes()[0] = true;
-                        currAnim.getEndpoints()[0] = r.getBoundingBox().getLocation();
-                        if (currAnim.getMotionTypes()[1]) {
-                            currAnim.calculateLR();
-                            System.out.println("Back and forth motion");
+                        ((DrawnObject)curr).setHasAnimation(true);
+                        ((DrawnObject)curr).getMotionTypes()[0] = true;
+                        ((DrawnObject)curr).getEndpoints()[0] = r.getBoundingBox().getLocation();
+                        if (((DrawnObject)curr).getMotionTypes()[1]) { //right motion also selected
+                            ((DrawnObject)curr).calculateLR();
+                            statusUpdate = "Set Back and Forth Animation";
                         } else {
-                            currAnim.calculateX(r.getBoundingBox().getLocation(), 0);
-                            System.out.println("Backward motion");
+                            ((DrawnObject)curr).calculateX(r.getBoundingBox().getLocation(), 0);
+                            statusUpdate = "Set Backward Animation";
                         }
                     } else if (name.equals("circle")) { //rotation
-                        currAnim.setHasAnimation(true);
-                        currAnim.getMotionTypes()[6] = true;
-                        System.out.println("Rotation");
+                        ((DrawnObject)curr).setHasAnimation(true);
+                        ((DrawnObject)curr).getMotionTypes()[6] = true;
+                        statusUpdate = "Set Rotation";
                     } else if (name.equals("caret")) { //going up from current location
-                        currAnim.setHasAnimation(true);
-                        currAnim.getMotionTypes()[2] = true;
-                        currAnim.getEndpoints()[2] = r.getBoundingBox().getLocation();
-                        if (currAnim.getMotionTypes()[3]) {
-                            currAnim.calculateUD();
-                            System.out.println("Up and Down motion between the caret and v");
+                        ((DrawnObject)curr).setHasAnimation(true);
+                        ((DrawnObject)curr).getMotionTypes()[2] = true;
+                        ((DrawnObject)curr).getEndpoints()[2] = r.getBoundingBox().getLocation();
+                        if (((DrawnObject)curr).getMotionTypes()[3]) {
+                            ((DrawnObject)curr).calculateUD();
+                            statusUpdate = "Set Up and Down Animation";
                         } else {
-                            currAnim.calculateY(r.getBoundingBox().getLocation(), 2);
-                            System.out.println("Going up from current location");
+                            ((DrawnObject)curr).calculateY(r.getBoundingBox().getLocation(), 2);
+                            statusUpdate = "Set Up Animation";
                         }
                     } else if (name.equals("v")) { // dropping
-                        currAnim.setHasAnimation(true);
-                        currAnim.getMotionTypes()[3] = true;
-                        currAnim.getEndpoints()[3] = r.getBoundingBox().getLocation();
-                        if (currAnim.getMotionTypes()[2]) {
-                            currAnim.calculateUD();
-                            System.out.println("Up and Down motion between the caret and v");
+                        ((DrawnObject)curr).setHasAnimation(true);
+                        ((DrawnObject)curr).getMotionTypes()[3] = true;
+                        ((DrawnObject)curr).getEndpoints()[3] = r.getBoundingBox().getLocation();
+                        if (((DrawnObject)curr).getMotionTypes()[2]) {
+                            ((DrawnObject)curr).calculateUD();
+                            statusUpdate = "Set Up and Down Animation";
                         } else {
-                            currAnim.calculateY(r.getBoundingBox().getLocation(), 3);
-                            System.out.println("Dropping from current location");
+                            ((DrawnObject)curr).calculateY(r.getBoundingBox().getLocation(), 3);
+                            statusUpdate = "Set Down Animation";
                         }
                     } else if (name.equals("x")) { // clearing
-                        System.out.println("Clear animation for this shape");
-                        currAnim.clearAnimation();
+                        statusUpdate = "Animation Cleared";
+                        ((DrawnObject)curr).clearAnimation();
+                    } else {
+                        statusUpdate = "Animation Not Recognized. Please Redraw.";
                     }
+                    curr = null;
+                    points = new ArrayList<>();
                 }
                 currentStroke = null;
+                repaint();
+            }
+	        else if (!mode && editorMode == 3) { //resizing
+                statusUpdate = "Resize Completed";
+                resizeCorner = -1;
+                curr = null;
+                points = new ArrayList<>();
                 repaint();
             }
         }
@@ -748,16 +654,16 @@ public class GameBoard extends JPanel implements ActionListener{
 
     public class MouseDragListener implements MouseMotionListener {
 	    public void mouseDragged(MouseEvent e) {
-            if (!mode && editorMode == 0) {
+            if (!mode && (editorMode == 0 || editorMode == 2)) {
                 currentStroke.add(e.getPoint());
+                statusUpdate = "Drawing New Stroke";
                 repaint();
-            } else if (!mode && editorMode == 1 && curr != null) {
-                // mouse dragging for moving objects, !editorMode implied
-                dragging = true;
+            }
+            else if (!mode && editorMode == 1) {
                 // work off of curr value
                 currPoint = e.getPoint();
-                int xDiff = curr.getBoundingBox().x - currPoint.x;
-                int yDiff = curr.getBoundingBox().y - currPoint.y;
+                int xDiff = prevDraggingPoint.x - currPoint.x;
+                int yDiff = prevDraggingPoint.y - currPoint.y;
                 if ((currPoint.x >= boundaryX || currPoint.x <= 10) && !draggingAndScrolling) {
                     //start scrolling
                     draggingAndScrolling = true;
@@ -785,17 +691,128 @@ public class GameBoard extends JPanel implements ActionListener{
                     if (draggingAndScrolling) {
                         draggingAndScrolling = false;
                     }
-                    curr.move(xDiff);
+                    points.get(0).setRect(points.get(0).getX() - xDiff, points.get(0).getY(), points.get(0).getWidth(), points.get(0).getHeight());
+                    points.get(1).setRect(points.get(1).getX() - xDiff, points.get(1).getY(), points.get(1).getWidth(), points.get(1).getHeight());
+                    points.get(2).setRect(points.get(2).getX() - xDiff, points.get(2).getY(), points.get(2).getWidth(), points.get(2).getHeight());
+                    points.get(3).setRect(points.get(3).getX() - xDiff, points.get(3).getY(), points.get(3).getWidth(), points.get(3).getHeight());
+                    //((DrawnObject)curr).move(xDiff);
                 }
-                curr.moveY(yDiff);
+                //((DrawnObject)curr).moveY(yDiff);
+                points.get(0).setRect(points.get(0).getX(), points.get(0).getY() - yDiff, points.get(0).getWidth(), points.get(0).getHeight());
+                points.get(1).setRect(points.get(1).getX(), points.get(1).getY() - yDiff, points.get(1).getWidth(), points.get(1).getHeight());
+                points.get(2).setRect(points.get(2).getX(), points.get(2).getY() - yDiff, points.get(2).getWidth(), points.get(2).getHeight());
+                points.get(3).setRect(points.get(3).getX(), points.get(3).getY() - yDiff, points.get(3).getWidth(), points.get(3).getHeight());
+                statusUpdate = "Dragging Object";
+                prevDraggingPoint = currPoint;
                 repaint();
-            } else if (!mode && editorMode == 2 && currentStroke != null) {
-                currentStroke.add(e.getPoint());
+            }
+            else if (!mode && editorMode == 3) {
+                currPoint = e.getPoint();
+                if (resizeCorner == 0) {
+                    points.get(1).setRect(currPoint.x, points.get(1).getY(), points.get(resizeCorner).getWidth(), points.get(resizeCorner).getHeight());
+                    points.get(3).setRect(points.get(3).getX(), currPoint.y, points.get(resizeCorner).getWidth(), points.get(resizeCorner).getHeight());
+                }
+                else if (resizeCorner == 1) {
+                    points.get(0).setRect(points.get(0).getX(), currPoint.y, points.get(resizeCorner).getWidth(), points.get(resizeCorner).getHeight());
+                    points.get(2).setRect(currPoint.x, points.get(3).getY(), points.get(resizeCorner).getWidth(), points.get(resizeCorner).getHeight());
+                }
+                else if (resizeCorner == 2) {
+                    points.get(1).setRect(currPoint.x, points.get(1).getY(), points.get(resizeCorner).getWidth(), points.get(resizeCorner).getHeight());
+                    points.get(3).setRect(points.get(3).getX(), currPoint.y, points.get(resizeCorner).getWidth(), points.get(resizeCorner).getHeight());
+                }
+                else if (resizeCorner == 3) {
+                    points.get(0).setRect(currPoint.x, points.get(0).getY(), points.get(resizeCorner).getWidth(), points.get(resizeCorner).getHeight());
+                    points.get(2).setRect(points.get(2).getX(), currPoint.y, points.get(resizeCorner).getWidth(), points.get(resizeCorner).getHeight());
+                }
+                else {
+                    return;
+                }
+                points.get(resizeCorner).setRect(currPoint.x, currPoint.y, points.get(resizeCorner).getWidth(), points.get(resizeCorner).getHeight());
+
+                //reset for the circle's endpoints
+                double tempWidth = Math.abs(points.get(2).getCenterX() - points.get(0).getCenterX());
+                double tempHeight = Math.abs(points.get(2).getCenterY() - points.get(0).getCenterY());
+                double tempRadius;
+                if (tempWidth > tempHeight) {
+                    tempRadius = tempWidth;
+                } else {
+                    tempRadius = tempHeight;
+                }
+                if (curr instanceof MainCharacter || curr instanceof Enemy) { //maintain the shape of the circle if the length and width aren't equal
+                    if (resizeCorner == 0) {
+                        points.get(1).setRect(points.get(1).getX(), points.get(2).getY() - tempRadius, points.get(1).getWidth(), points.get(1).getHeight());
+                        points.get(3).setRect(points.get(2).getX() - tempRadius, points.get(3).getY(), points.get(3).getWidth(), points.get(3).getHeight());
+                        points.get(0).setRect(points.get(2).getX() - tempRadius, points.get(2).getY() - tempRadius, points.get(0).getWidth(), points.get(0).getHeight());
+                    } else if (resizeCorner == 1) {
+                        points.get(0).setRect(points.get(0).getX(), points.get(3).getY() - tempRadius, points.get(0).getWidth(), points.get(0).getHeight());
+                        points.get(2).setRect(points.get(3).getX() + tempRadius, points.get(2).getY(), points.get(2).getWidth(), points.get(2).getHeight());
+                        points.get(1).setRect(points.get(3).getX() + tempRadius, points.get(3).getY() - tempRadius, points.get(1).getWidth(), points.get(1).getHeight());
+                    } else if (resizeCorner == 2) {
+                        points.get(3).setRect(points.get(3).getX(), points.get(0).getY() + tempRadius, points.get(3).getWidth(), points.get(3).getHeight());
+                        points.get(1).setRect(points.get(0).getX() + tempRadius, points.get(1).getY(), points.get(1).getWidth(), points.get(1).getHeight());
+                        points.get(2).setRect(points.get(0).getX() + tempRadius, points.get(0).getY() + tempRadius, points.get(2).getWidth(), points.get(2).getHeight());
+                    } else if (resizeCorner == 3) {
+                        points.get(0).setRect(points.get(1).getX() - tempRadius, points.get(0).getY(), points.get(0).getWidth(), points.get(0).getHeight());
+                        points.get(2).setRect(points.get(2).getX(), points.get(1).getY() + tempRadius, points.get(2).getWidth(), points.get(2).getHeight());
+                        points.get(3).setRect(points.get(1).getX() - tempRadius, points.get(1).getY() + tempRadius, points.get(3).getWidth(), points.get(3).getHeight());
+                    }
+                }
+
+                statusUpdate = "Resizing Object";
                 repaint();
             }
         }
 
         public void mouseMoved(MouseEvent e) {
+        }
+    }
+
+    public class ColorChangeAnim implements ActionListener {
+	    double steps[];
+	    int percentageDone = 0;
+        Color start;
+        Color end;
+        boolean deletion;
+
+        public ColorChangeAnim(Color start, Color end, boolean deletion) {
+            this.start = start;
+            this.end = end;
+            this.deletion = deletion;
+            steps = new double[]{(end.getRed() - start.getRed())/100.0, (end.getGreen() - start.getGreen())/100.0, (end.getBlue() - start.getBlue())/100.0};
+        }
+
+        public void actionPerformed(ActionEvent c) {
+            if (percentageDone == 100) {
+                if (deletion) {
+                    allObjects.remove(curr);
+                }
+                curr = null;
+                points = new ArrayList<>();
+                animTime.stop();
+            } else {
+                double red = start.getRed() + (percentageDone * steps[0]);
+                double green = start.getGreen() + (percentageDone * steps[1]);
+                double blue = start.getBlue() + (percentageDone * steps[2]);
+
+                if (red < 0) {
+                    red = 0;
+                } else if (red > 255) {
+                    red = 255;
+                }
+                if (green < 0) {
+                    green = 0;
+                } else if (green > 255) {
+                    green = 255;
+                }
+                if (blue < 0) {
+                    blue = 0;
+                } else if (blue > 255) {
+                    blue = 255;
+                }
+                //System.out.println("Red: " + red + " Green: " + green + " Blue: " + blue);
+                ((DrawnObject)curr).setColor(new Color((int)red, (int)green, (int)blue));
+                percentageDone += 1;
+            }
         }
     }
 }

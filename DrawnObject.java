@@ -30,6 +30,7 @@ public abstract class DrawnObject {
     private int[] motionDistances = new int[7]; // same as above
     private int[] currentMotionDistances = new int[2]; // 0-Left-Right, 1-Up-Down
     private Point[] endpoints = new Point[4]; // 0-left, 1-right, 2-up, 3-down
+    private Color color;
 
     public DrawnObject() {
     }
@@ -55,6 +56,10 @@ public abstract class DrawnObject {
     public int[] getCurrentMotionDistances() { return currentMotionDistances; }
 
     public Point[] getEndpoints() { return endpoints; }
+
+    public void setColor(Color c) { color = c; }
+
+    public Color getColor() { return color; }
 
     /**
      * Updates left-right motion, including when it is already bouncing L->R
@@ -83,7 +88,14 @@ public abstract class DrawnObject {
     }
 
     public void calculateX(Point p, int index) {
-        motionDistances[index] = (int) (Math.abs(p.getX() - boundingBox.getX()) / magicNumber);
+        System.out.println("Called calculateX");
+        if (index == 0) { //left
+            motionDistances[0] = 1;
+        } else if (index == 1) { //right
+            motionDistances[1] = -1;
+        } else { //back and forth
+            motionDistances[index] = (int) (Math.abs(p.getX() - boundingBox.getX()) / magicNumber);
+        }
     }
 
     public void calculateY(Point p, int index) {

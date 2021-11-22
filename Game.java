@@ -7,24 +7,29 @@ public class Game implements ActionListener{
 	private JFrame frame;
 	private Timer time;
 	private boolean mode; //true == play mode, false == author mode
-	//private boolean editorMode = true; // default true == drawing mode, false == dragging mode
 	private int editorMode; // 0 = drawing, 1 = dragging, 2 = animating
 	private JMenuBar menuBar;
 	private JMenu modeMenu;
 	private JRadioButtonMenuItem authorModeMenuItem;
 	private JRadioButtonMenuItem playModeMenuItem;
+	private JLabel statusBar;
+	private JPanel gamePanel;
 	private JLabel gameModeLabel;
 	private ButtonGroup modeButtonGroup;
 	private JPanel sidePanel;
-	private JRadioButton drawingModeButton;
-	private JRadioButton draggingModeButton;
-	private JRadioButton animatingModeButton;
 	private ButtonGroup sidePanelGroup;
 	private JLabel scoreLabel;
 	private JButton newPlatformButton;
 	private JButton newEnemyButton;
 	private JButton newRewardButton;
 	private JButton newPenaltyButton;
+	private JRadioButton rewardRadioButton;
+	private JRadioButton penaltyRadioButton;
+	private ButtonGroup effectSwitchGroup;
+	private JPanel costPanel;
+	private JLabel costLabel;
+	private JTextField costTextField;
+	private JButton deleteButton;
 	private GameBoard gameBoard;
 
 	public Game() {
@@ -35,10 +40,14 @@ public class Game implements ActionListener{
 		authorModeMenuItem = new JRadioButtonMenuItem("Author", true);
 		playModeMenuItem = new JRadioButtonMenuItem("Play", false);
 		modeButtonGroup = new ButtonGroup();
+		statusBar = new JLabel("");
+		statusBar.setHorizontalAlignment(JLabel.CENTER);
+		gamePanel = new JPanel();
 
 		gameBoard = new GameBoard(mode, editorMode);
 		gameBoard.setSize(700, 300);
 		gameBoard.setPreferredSize(new Dimension(700, 300));
+		gameBoard.setMinimumSize(new Dimension(700, 300));
 
 		sidePanel = new JPanel();
 		sidePanel.setLayout(new BoxLayout(sidePanel, BoxLayout.Y_AXIS));
@@ -50,67 +59,70 @@ public class Game implements ActionListener{
 		gameModeLabel.setBorder(new EmptyBorder(0, 0, 10, 0));
 		scoreLabel = new JLabel("Score: " + gameBoard.getScore());
 		scoreLabel.setVisible(false);
-		drawingModeButton = new JRadioButton("Drawing Mode", true);
-		draggingModeButton = new JRadioButton("Dragging Mode", false);
-		animatingModeButton = new JRadioButton("Animation Mode", false);
-		animatingModeButton.setBorder(new EmptyBorder(0, 0, 10, 0));
 		sidePanelGroup = new ButtonGroup();
 		newPlatformButton = new JButton("Add Platform");
 		newEnemyButton = new JButton("Add Enemy");
 		newRewardButton = new JButton("Add Reward");
 		newPenaltyButton = new JButton("Add Penalty");
+		rewardRadioButton = new JRadioButton("Reward");
+		penaltyRadioButton = new JRadioButton("Penalty");
+		effectSwitchGroup = new ButtonGroup();
+		costPanel = new JPanel();
+		costPanel.setBackground(Color.white);
+		costLabel = new JLabel("Cost");
+		costTextField = new JTextField("0", 5);
+		costTextField.setHorizontalAlignment(JTextField.CENTER);
+		deleteButton = new JButton("Delete Shape");
+		deleteButton.setBackground(Color.red);
+		deleteButton.setOpaque(true);
+		deleteButton.setBorderPainted(false);
+		deleteButton.setForeground(Color.white);
+		rewardRadioButton.setVisible(false);
+		penaltyRadioButton.setVisible(false);
+		costLabel.setVisible(false);
+		costTextField.setVisible(false);
+		deleteButton.setVisible(false);
 		gameModeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 		scoreLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-		drawingModeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-		draggingModeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-		animatingModeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 		newPlatformButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 		newEnemyButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 		newRewardButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 		newPenaltyButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+		rewardRadioButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+		penaltyRadioButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+		costPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		deleteButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 		authorModeMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent c) {
 				toggleMode();
 				gameModeLabel.setText("AUTHOR");
 				scoreLabel.setVisible(false);
-				drawingModeButton.setVisible(true);
-				draggingModeButton.setVisible(true);
-				animatingModeButton.setVisible(true);
 				newPlatformButton.setVisible(true);
 				newEnemyButton.setVisible(true);
 				newRewardButton.setVisible(true);
 				newPenaltyButton.setVisible(true);
+				rewardRadioButton.setVisible(false);
+				penaltyRadioButton.setVisible(false);
+				costLabel.setVisible(false);
+				costTextField.setVisible(false);
+				deleteButton.setVisible(false);
 			}
 		});
 		playModeMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent c) {
 				toggleMode();
-				drawingModeButton.setVisible(false);
-				draggingModeButton.setVisible(false);
-				animatingModeButton.setVisible(false);
 				newPlatformButton.setVisible(false);
 				newEnemyButton.setVisible(false);
 				newRewardButton.setVisible(false);
 				newPenaltyButton.setVisible(false);
 				gameModeLabel.setText("PLAY");
 				scoreLabel.setVisible(true);
-			}
-		});
-
-		drawingModeButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent c) {
-				toggleEditorMode(0);
-			}
-		});
-		draggingModeButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent c) {
-				toggleEditorMode(1);
-			}
-		});
-		animatingModeButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent c) {
-				toggleEditorMode(2);
+				rewardRadioButton.setVisible(false);
+				penaltyRadioButton.setVisible(false);
+				costLabel.setVisible(false);
+				costTextField.setVisible(false);
+				deleteButton.setVisible(false);
 			}
 		});
 
@@ -134,6 +146,31 @@ public class Game implements ActionListener{
 				gameBoard.addEffect(false);
 			}
 		});
+		rewardRadioButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent c) {
+				gameBoard.switchEffect((Effect)gameBoard.getSelectedObject());
+				penaltyRadioButton.setSelected(false);
+				rewardRadioButton.setSelected(true);
+				((Effect)gameBoard.getSelectedObject()).setEffect(true);
+				frame.repaint();
+			}
+		});
+		penaltyRadioButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent c) {
+				gameBoard.switchEffect((Effect)gameBoard.getSelectedObject());
+				penaltyRadioButton.setSelected(true);
+				rewardRadioButton.setSelected(false);
+				((Effect)gameBoard.getSelectedObject()).setEffect(false);
+				frame.repaint();
+			}
+		});
+		deleteButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent c) {
+				gameBoard.deleteShape(gameBoard.getSelectedObject());
+				deleteButton.setVisible(false);
+				frame.repaint();
+			}
+		});
 
 		modeButtonGroup.add(authorModeMenuItem);
 		modeButtonGroup.add(playModeMenuItem);
@@ -141,25 +178,30 @@ public class Game implements ActionListener{
 		modeMenu.add(playModeMenuItem);
 		menuBar.add(modeMenu);
 
-		sidePanelGroup.add(drawingModeButton);
-		sidePanelGroup.add(draggingModeButton);
-		sidePanelGroup.add(animatingModeButton);
 		sidePanel.add(gameModeLabel);
 		sidePanel.add(scoreLabel);
-		sidePanel.add(drawingModeButton);
-		sidePanel.add(draggingModeButton);
-		sidePanel.add(animatingModeButton);
 		sidePanel.add(newPlatformButton);
 		sidePanel.add(newEnemyButton);
 		sidePanel.add(newRewardButton);
 		sidePanel.add(newPenaltyButton);
+		effectSwitchGroup.add(rewardRadioButton);
+		effectSwitchGroup.add(penaltyRadioButton);
+		sidePanel.add(rewardRadioButton);
+		sidePanel.add(penaltyRadioButton);
+		costPanel.add(costLabel);
+		costPanel.add(costTextField);
+		sidePanel.add(costPanel);
+		sidePanel.add(deleteButton);
 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setMinimumSize(new Dimension(900, 300));
-		frame.setLayout(new FlowLayout());
+		gamePanel.setLayout(new FlowLayout());
+		gamePanel.add(gameBoard);
+		gamePanel.add(sidePanel);
+		frame.setLayout(new BorderLayout());
 		frame.setJMenuBar(menuBar);
-		frame.add(gameBoard);
-		frame.add(sidePanel);
+		frame.add(gamePanel, BorderLayout.CENTER);
+		frame.add(statusBar, BorderLayout.SOUTH);
 		frame.pack();
 		frame.setVisible(true);
 
@@ -169,6 +211,35 @@ public class Game implements ActionListener{
 
 	public void actionPerformed(ActionEvent e) {
 		scoreLabel.setText("Score: " + gameBoard.getScore());
+		statusBar.setText("Status: " + gameBoard.getStatusUpdate());
+		Object curr = gameBoard.getSelectedObject();
+		if (!mode && curr != null && !(curr instanceof MainCharacter)) {
+			deleteButton.setVisible(true);
+			if (curr instanceof Effect) {
+				if (((Effect)curr).getEffect()) {
+					rewardRadioButton.setSelected(true);
+				}
+				else {
+					penaltyRadioButton.setSelected(true);
+				}
+				rewardRadioButton.setVisible(true);
+				penaltyRadioButton.setVisible(true);
+				costLabel.setVisible(true);
+				costTextField.setVisible(true);
+			}
+			else {
+				rewardRadioButton.setVisible(false);
+				penaltyRadioButton.setVisible(false);
+				costLabel.setVisible(false);
+				costTextField.setVisible(false);
+			}
+		} else {
+			rewardRadioButton.setVisible(false);
+			penaltyRadioButton.setVisible(false);
+			costLabel.setVisible(false);
+			costTextField.setVisible(false);
+			deleteButton.setVisible(false);
+		}
 		frame.repaint();
 	}
 
@@ -184,18 +255,14 @@ public class Game implements ActionListener{
 		if (mode) {
 			mode = false;
 			//toggle from play mode to author mode
+			gameBoard.setStatusUpdate("Game Set To Author Mode");
 		}
 		else {
 			mode = true;
 			//toggle from author mode to play mode
+			gameBoard.setStatusUpdate("Game Set To Play Mode");
 		}
 		gameBoard.setMode(mode);
-		frame.repaint();
-	}
-
-	private void toggleEditorMode(int inputMode) {
-		editorMode = inputMode;
-		gameBoard.setEditorMode(inputMode);
 		frame.repaint();
 	}
 }
