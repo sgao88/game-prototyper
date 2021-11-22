@@ -29,6 +29,7 @@ public class GameBoard extends JPanel implements ActionListener{
     String statusUpdate;
     Object temp;
     int movementDirection = -1; // 1 = right, 0 = left
+    Point prevDraggingPoint;
 
 	public GameBoard(boolean mode, int editorMode) {
         character = new MainCharacter();
@@ -494,6 +495,7 @@ public class GameBoard extends JPanel implements ActionListener{
                         else if (!curr.equals(character) && within(curr, currPoint)){ //dragging
                             statusUpdate = "Dragging Object";
                             editorMode = 1;
+                            prevDraggingPoint = e.getPoint();
                             repaint();
                         }
                         else { // animating
@@ -556,13 +558,14 @@ public class GameBoard extends JPanel implements ActionListener{
 	        else if (!mode && editorMode == 1) {
                 currPoint = e.getPoint();
                 // final update for end location
-                int xDiff = ((DrawnObject)curr).getBoundingBox().x - currPoint.x;
-                int yDiff = ((DrawnObject)curr).getBoundingBox().y - currPoint.y;
+                int xDiff = prevDraggingPoint.x - currPoint.x;
+                int yDiff = prevDraggingPoint.y - currPoint.y;
                 ((DrawnObject)curr).move(xDiff);
                 ((DrawnObject)curr).moveY(yDiff);
                 curr = null;
                 points = new ArrayList<>();
                 statusUpdate = "Dragging Completed";
+                prevDraggingPoint = null;
                 repaint();
             }
 	        else if (!mode && editorMode == 2 && currentStroke != null && currentStroke.size() > 0) {
@@ -659,8 +662,8 @@ public class GameBoard extends JPanel implements ActionListener{
             else if (!mode && editorMode == 1) {
                 // work off of curr value
                 currPoint = e.getPoint();
-                int xDiff = ((DrawnObject)curr).getBoundingBox().x - currPoint.x;
-                int yDiff = ((DrawnObject)curr).getBoundingBox().y - currPoint.y;
+                int xDiff = prevDraggingPoint.x - currPoint.x;
+                int yDiff = prevDraggingPoint.y - currPoint.y;
                 if ((currPoint.x >= boundaryX || currPoint.x <= 10) && !draggingAndScrolling) {
                     //start scrolling
                     draggingAndScrolling = true;
@@ -700,6 +703,7 @@ public class GameBoard extends JPanel implements ActionListener{
                 points.get(2).setRect(points.get(2).getX(), points.get(2).getY() - yDiff, points.get(2).getWidth(), points.get(2).getHeight());
                 points.get(3).setRect(points.get(3).getX(), points.get(3).getY() - yDiff, points.get(3).getWidth(), points.get(3).getHeight());
                 statusUpdate = "Dragging Object";
+                prevDraggingPoint = currPoint;
                 repaint();
             }
             else if (!mode && editorMode == 3) {
