@@ -617,8 +617,6 @@ public class GameBoard extends JPanel implements ActionListener{
                 repaint();
             }
 	        else if (!mode && editorMode == 3) { //resizing
-                //currPoint = e.getPoint();
-                //final update for the shape?
                 statusUpdate = "Resize Completed";
                 resizeCorner = -1;
                 curr = null;
@@ -712,6 +710,52 @@ public class GameBoard extends JPanel implements ActionListener{
                     return;
                 }
                 points.get(resizeCorner).setRect(currPoint.x, currPoint.y, points.get(resizeCorner).getWidth(), points.get(resizeCorner).getHeight());
+
+                //reset for the circle's enpoints
+                double tempWidth = Math.abs(points.get(2).getCenterX() - points.get(0).getCenterX());
+                double tempHeight = Math.abs(points.get(2).getCenterY() - points.get(0).getCenterY());
+                double tempRadius;
+                if (tempWidth > tempHeight) {
+                    tempRadius = tempWidth;
+                } else {
+                    tempRadius = tempHeight;
+                }
+                if (curr instanceof MainCharacter || curr instanceof Enemy) {
+                    if (resizeCorner == 0) {
+                        //stationary point = 2
+                        //set y of 1
+                        points.get(1).setRect(points.get(1).getX(), points.get(2).getY() - tempRadius, points.get(1).getWidth(), points.get(1).getHeight());
+                        //set x of 3
+                        points.get(3).setRect(points.get(2).getX() - tempRadius, points.get(3).getY(), points.get(3).getWidth(), points.get(3).getHeight());
+                        //set x and y of 0
+                        points.get(0).setRect(points.get(2).getX() - tempRadius, points.get(2).getY() - tempRadius, points.get(0).getWidth(), points.get(0).getHeight());
+                    } else if (resizeCorner == 1) {
+                        //stationary point = 3
+                        //set y of 0
+                        points.get(0).setRect(points.get(0).getX(), points.get(3).getY() - tempRadius, points.get(0).getWidth(), points.get(0).getHeight());
+                        //set x of 2
+                        points.get(2).setRect(points.get(3).getX() + tempRadius, points.get(2).getY(), points.get(2).getWidth(), points.get(2).getHeight());
+                        //set x and y of 1
+                        points.get(1).setRect(points.get(3).getX() + tempRadius, points.get(3).getY() - tempRadius, points.get(1).getWidth(), points.get(1).getHeight());
+                    } else if (resizeCorner == 2) {
+                        //stationary point = 0
+                        //set y of 3
+                        points.get(3).setRect(points.get(3).getX(), points.get(0).getY() + tempRadius, points.get(3).getWidth(), points.get(3).getHeight());
+                        //set x of 1
+                        points.get(1).setRect(points.get(0).getX() + tempRadius, points.get(1).getY(), points.get(1).getWidth(), points.get(1).getHeight());
+                        //set x and y of 2
+                        points.get(2).setRect(points.get(0).getX() + tempRadius, points.get(0).getY() + tempRadius, points.get(2).getWidth(), points.get(2).getHeight());
+                    } else if (resizeCorner == 3) {
+                        //stationary point = 1
+                        //set x of 0
+                        points.get(0).setRect(points.get(1).getX() - tempRadius, points.get(0).getY(), points.get(0).getWidth(), points.get(0).getHeight());
+                        //set y of 2
+                        points.get(2).setRect(points.get(2).getX(), points.get(1).getY() + tempRadius, points.get(2).getWidth(), points.get(2).getHeight());
+                        //set x and y of 3
+                        points.get(3).setRect(points.get(1).getX() - tempRadius, points.get(1).getY() + tempRadius, points.get(3).getWidth(), points.get(3).getHeight());
+                    }
+                }
+
                 statusUpdate = "Resizing Object";
                 repaint();
             }
