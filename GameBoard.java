@@ -307,14 +307,18 @@ public class GameBoard extends JPanel implements ActionListener{
                     if (isGravity && !jumping) {
                         character.setY(obj.getBoundingBox().y + character.getBounds().height + 1);
                     } else {
-                        canMove = false;
+                        //canMove = false;
                         statusUpdate = "Blocked by a Platform";
                     }
                     //bumpingAnimation(true, obj);
                     if (movementDirection) {
-                        character.moveX(20);
+                        for (DrawnObject obj1 : allObjects) {
+                            obj1.move(-50);
+                        }
                     } else {
-                        character.moveX(-20);
+                        for (DrawnObject obj1 : allObjects) {
+                            obj1.move(50);
+                        }
                     }
                 } else if (canMove && (obj instanceof Enemy)) {
                     if (isGravity && !jumping) {
