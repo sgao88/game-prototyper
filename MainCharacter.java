@@ -43,4 +43,10 @@ public class MainCharacter {
         bounds.setLocation((int) bounds.getX(), currY - dy);
         setY(currY - dy);
     }
+
+    public void moveX(int dx) {
+        int currX = (int)bounds.getX();
+        bounds.setLocation(currX - dx, (int) bounds.getY());
+        setX(currX - dx);
+    }
 }

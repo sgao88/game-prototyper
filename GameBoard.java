@@ -28,6 +28,7 @@ public class GameBoard extends JPanel implements ActionListener{
     double angle = 0.0;
     String statusUpdate;
     Object temp;
+    boolean movementDirection = true; // true = right, false = left
 
 	public GameBoard(boolean mode, int editorMode) {
         character = new MainCharacter();
@@ -276,6 +277,12 @@ public class GameBoard extends JPanel implements ActionListener{
 	    repaint();
     }
 
+//    public void bumpingAnimation(boolean type, DrawnObject obj) {
+//        animTime = new Timer(1, new bumpAnimation(20, type, obj));
+//        animTime.start();
+//        repaint();
+//    }
+
     public void checkCollisions(boolean isGravity) {
 	    Rectangle item;
 	    for (DrawnObject obj : allObjects) {
@@ -296,12 +303,31 @@ public class GameBoard extends JPanel implements ActionListener{
 	                    statusUpdate = "Hit Penalty :( " + cost + " Points Lost";
                     }
                 }
-	            else if (canMove && (obj instanceof Platform || obj instanceof Enemy)) {
+	            else if (canMove && (obj instanceof Platform)) {
                     if (isGravity && !jumping) {
                         character.setY(obj.getBoundingBox().y + character.getBounds().height + 1);
                     } else {
                         canMove = false;
-                        statusUpdate = "Blocked by an Object";
+                        statusUpdate = "Blocked by a Platform";
+                    }
+                    //bumpingAnimation(true, obj);
+                    if (movementDirection) {
+                        character.moveX(20);
+                    } else {
+                        character.moveX(-20);
+                    }
+                } else if (canMove && (obj instanceof Enemy)) {
+                    if (isGravity && !jumping) {
+                        character.setY(obj.getBoundingBox().y + character.getBounds().height + 1);
+                    } else {
+                        //canMove = false;
+                        statusUpdate = "Blocked by an Enemy";
+                    }
+                    //bumpingAnimation(false, obj);
+                    if (movementDirection) {
+                        obj.move(-50);
+                    } else {
+                        obj.move(50);
                     }
                 }
             }
@@ -333,9 +359,11 @@ public class GameBoard extends JPanel implements ActionListener{
             int dx = 0;
             int dy = 0;
             if (key == KeyEvent.VK_LEFT && canMove) {
+                movementDirection = false;
                 dx = -4; //This can be changed to speed up/slow down game. Larger dx == faster scrolling
             }
             else if (key == KeyEvent.VK_RIGHT && canMove) {
+                movementDirection = true;
                 dx = 4;
             }
             if (key == KeyEvent.VK_UP && canMove) {
@@ -699,15 +727,15 @@ public class GameBoard extends JPanel implements ActionListener{
     public class ColorChangeAnim implements ActionListener {
 	    double steps[];
 	    int percentageDone = 0;
-	    Color start;
-	    Color end;
-	    boolean deletion;
+        Color start;
+        Color end;
+        boolean deletion;
 
-	    public ColorChangeAnim(Color start, Color end, boolean deletion) {
-	        this.start = start;
-	        this.end = end;
-	        this.deletion = deletion;
-	        steps = new double[]{(end.getRed() - start.getRed())/100.0, (end.getGreen() - start.getGreen())/100.0, (end.getBlue() - start.getBlue())/100.0};
+        public ColorChangeAnim(Color start, Color end, boolean deletion) {
+            this.start = start;
+            this.end = end;
+            this.deletion = deletion;
+            steps = new double[]{(end.getRed() - start.getRed())/100.0, (end.getGreen() - start.getGreen())/100.0, (end.getBlue() - start.getBlue())/100.0};
         }
 
         public void actionPerformed(ActionEvent c) {
@@ -743,4 +771,35 @@ public class GameBoard extends JPanel implements ActionListener{
             }
         }
     }
+
+//    public class bumpAnimation implements ActionListener {
+//        double steps[]; // length 7: increments .2, .4, .6, .7, .8, .9, 1.0
+//        int stepNum = 0;
+//        int distance;
+//        DrawnObject current;
+//        boolean isPlatform; // true = platform obj, false = enemy obj
+//
+//        public bumpAnimation(int distance, boolean objectType, DrawnObject obj) {
+//            this.distance = distance;
+//            this.isPlatform = objectType;
+//            current = obj;
+//            steps = new double[]{distance * .2, distance * .4, distance * .6, distance * .7, distance * .8, distance * .9, distance};
+//        }
+//
+//        public void actionPerformed(ActionEvent c) {
+//            if (stepNum == 7) {
+//                if (isPlatform) {
+//                    character.setX(character.getX() - 5);
+//                }
+//                curr = null;
+//                animTime.stop();
+//            } else {
+//                if (isPlatform) {
+//                    character.setX(character.getX() - 2);
+//                } else {
+//                    current.move((int) steps[stepNum] * -1);
+//                }
+//            }
+//        }
+//    }
 }
