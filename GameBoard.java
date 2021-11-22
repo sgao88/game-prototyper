@@ -77,7 +77,6 @@ public class GameBoard extends JPanel implements ActionListener{
                 obj.step();
                 if (obj.getMotionTypes()[6]) {
                     // has rotation
-                    //System.out.println("object has rotation");
                     tempHasRotation = true;
                     tempRotationImage = rotate(obj);
                 }
@@ -99,6 +98,10 @@ public class GameBoard extends JPanel implements ActionListener{
                     }
                     g2d.setColor(obj.getColor());
                     g2d.fillOval((int) tempRotationImage.getBounds().getX(), (int) tempRotationImage.getBounds().getY(), (int) tempRotationImage.getBounds().getWidth(), (int) tempRotationImage.getBounds().getHeight());
+
+                    g2d.setColor(Color.black);
+                    g2d.fillRect((int) tempRotationImage.getBounds().getX(), (int) tempRotationImage.getBounds().getY(), 4, 4);
+                    g2d.draw(tempRotationImage);
                 } else {
                     if (curr != null && curr.equals(obj)) {
                         g2d.setColor(Color.gray);
@@ -118,7 +121,6 @@ public class GameBoard extends JPanel implements ActionListener{
             }
             else if (obj instanceof Platform) {
                 if (tempHasRotation) {
-                    System.out.println("platform rotation redraw");
                     if (curr != null && curr.equals(obj)) {
                         g2d.setColor(Color.gray);
                         ((DrawnObject)curr).getBoundingBox().setRect(points.get(0).getCenterX(), points.get(0).getCenterY(), Math.abs(points.get(2).getCenterX() - points.get(0).getCenterX()), Math.abs(points.get(2).getCenterY() - points.get(0).getCenterY()));
@@ -147,9 +149,16 @@ public class GameBoard extends JPanel implements ActionListener{
                         }
 
                         g2d.setColor(e.getColor());
+                        Point center = new Point((int)b.getX(), (int)b.getY());
+                        Point one = new Point((int)b.getX(), (int)(b.getY() + b.getHeight()));
+                        Point two = new Point((int)(b.getX() + b.getWidth()), (int)(b.getY() + b.getHeight()));
+                        Point three = new Point((int)(b.getX() + (b.getWidth()/2.0)), (int)b.getY());
+                        one = rotatePoint(one, center);
+                        two = rotatePoint(two, center);
+                        three = rotatePoint(three, center);
                         //bottom left, bottom right, top midpoint
-                        int[] xPoints = new int[] {(int)tempRotationImage.getBounds().getX(), (int)(tempRotationImage.getBounds().getX() + tempRotationImage.getBounds().getWidth()), (int)(tempRotationImage.getBounds().getX() + (tempRotationImage.getBounds().getWidth()/2.0))};
-                        int[] yPoints = new int[] {(int)(tempRotationImage.getBounds().getY() + tempRotationImage.getBounds().getHeight()), (int)(tempRotationImage.getBounds().getY() + tempRotationImage.getBounds().getHeight()), (int)tempRotationImage.getBounds().getY()};
+                        int[] xPoints = new int[] {one.x, two.x, three.x};
+                        int[] yPoints = new int[] {one.y, two.y, three.y};
                         g2d.fillPolygon(xPoints, yPoints, 3);
                     } else {
                         if (curr != null && curr.equals(obj)) {
@@ -206,12 +215,18 @@ public class GameBoard extends JPanel implements ActionListener{
     }
 
     private Shape rotate(DrawnObject o) {
-        //System.out.println("rotate method");
         AffineTransform tx = new AffineTransform();
-        angle += 0.05;
+        angle += (Math.PI/128);
         tx.rotate(angle, o.getBoundingBox().getX(), o.getBoundingBox().getY());
         Shape newShape = tx.createTransformedShape(o.getBoundingBox());
         return newShape;
+    }
+
+    private Point rotatePoint(Point p, Point center) {
+        angle += 0.01;
+        int x = (int)(Math.cos(angle) * (p.x-center.x) - Math.sin(angle) * (p.y -  center.y) + center.x);
+        int y = (int)(Math.sin(angle) * (p.x - center.x) + Math.cos(angle) * (p.y - center.y) + center.y);
+        return new Point(x, y);
     }
 
     public void setMode(boolean m) {
@@ -500,7 +515,7 @@ public class GameBoard extends JPanel implements ActionListener{
         }
 
         public void mouseReleased(MouseEvent e) {
-	        if (!mode && editorMode == 0 && currentStroke.size() > 0) {
+	        if (!mode && editorMode == 0 && currentStroke != null && currentStroke.size() > 0) {
                 //pass current stroke to the recognizer
                 dollar.Result r = dr.recognize(currentStroke);
                 if (r.getMatchedTemplate() != null) {
@@ -551,7 +566,7 @@ public class GameBoard extends JPanel implements ActionListener{
                 statusUpdate = "Dragging Completed";
                 repaint();
             }
-	        else if (!mode && editorMode == 2 && currentStroke.size() > 0) {
+	        else if (!mode && editorMode == 2 && currentStroke != null && currentStroke.size() > 0) {
                 dollar.Result r = dr.recognize(currentStroke);
                 if (r.getMatchedTemplate() != null) {
                     String name = r.getName();
@@ -711,7 +726,7 @@ public class GameBoard extends JPanel implements ActionListener{
                 }
                 points.get(resizeCorner).setRect(currPoint.x, currPoint.y, points.get(resizeCorner).getWidth(), points.get(resizeCorner).getHeight());
 
-                //reset for the circle's enpoints
+                //reset for the circle's endpoints
                 double tempWidth = Math.abs(points.get(2).getCenterX() - points.get(0).getCenterX());
                 double tempHeight = Math.abs(points.get(2).getCenterY() - points.get(0).getCenterY());
                 double tempRadius;
@@ -720,38 +735,22 @@ public class GameBoard extends JPanel implements ActionListener{
                 } else {
                     tempRadius = tempHeight;
                 }
-                if (curr instanceof MainCharacter || curr instanceof Enemy) {
+                if (curr instanceof MainCharacter || curr instanceof Enemy) { //maintain the shape of the circle if the length and width aren't equal
                     if (resizeCorner == 0) {
-                        //stationary point = 2
-                        //set y of 1
                         points.get(1).setRect(points.get(1).getX(), points.get(2).getY() - tempRadius, points.get(1).getWidth(), points.get(1).getHeight());
-                        //set x of 3
                         points.get(3).setRect(points.get(2).getX() - tempRadius, points.get(3).getY(), points.get(3).getWidth(), points.get(3).getHeight());
-                        //set x and y of 0
                         points.get(0).setRect(points.get(2).getX() - tempRadius, points.get(2).getY() - tempRadius, points.get(0).getWidth(), points.get(0).getHeight());
                     } else if (resizeCorner == 1) {
-                        //stationary point = 3
-                        //set y of 0
                         points.get(0).setRect(points.get(0).getX(), points.get(3).getY() - tempRadius, points.get(0).getWidth(), points.get(0).getHeight());
-                        //set x of 2
                         points.get(2).setRect(points.get(3).getX() + tempRadius, points.get(2).getY(), points.get(2).getWidth(), points.get(2).getHeight());
-                        //set x and y of 1
                         points.get(1).setRect(points.get(3).getX() + tempRadius, points.get(3).getY() - tempRadius, points.get(1).getWidth(), points.get(1).getHeight());
                     } else if (resizeCorner == 2) {
-                        //stationary point = 0
-                        //set y of 3
                         points.get(3).setRect(points.get(3).getX(), points.get(0).getY() + tempRadius, points.get(3).getWidth(), points.get(3).getHeight());
-                        //set x of 1
                         points.get(1).setRect(points.get(0).getX() + tempRadius, points.get(1).getY(), points.get(1).getWidth(), points.get(1).getHeight());
-                        //set x and y of 2
                         points.get(2).setRect(points.get(0).getX() + tempRadius, points.get(0).getY() + tempRadius, points.get(2).getWidth(), points.get(2).getHeight());
                     } else if (resizeCorner == 3) {
-                        //stationary point = 1
-                        //set x of 0
                         points.get(0).setRect(points.get(1).getX() - tempRadius, points.get(0).getY(), points.get(0).getWidth(), points.get(0).getHeight());
-                        //set y of 2
                         points.get(2).setRect(points.get(2).getX(), points.get(1).getY() + tempRadius, points.get(2).getWidth(), points.get(2).getHeight());
-                        //set x and y of 3
                         points.get(3).setRect(points.get(1).getX() - tempRadius, points.get(1).getY() + tempRadius, points.get(3).getWidth(), points.get(3).getHeight());
                     }
                 }
