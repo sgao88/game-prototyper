@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 import javax.swing.border.*;
 
 public class Game implements ActionListener{
@@ -28,7 +29,7 @@ public class Game implements ActionListener{
 	private ButtonGroup effectSwitchGroup;
 	private JPanel costPanel;
 	private JLabel costLabel;
-	private JTextField costTextField;
+	private static JTextField costTextField;
 	private JButton deleteButton;
 	private GameBoard gameBoard;
 
@@ -148,26 +149,41 @@ public class Game implements ActionListener{
 		});
 		rewardRadioButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent c) {
-				gameBoard.switchEffect((Effect)gameBoard.getSelectedObject());
-				penaltyRadioButton.setSelected(false);
-				rewardRadioButton.setSelected(true);
-				((Effect)gameBoard.getSelectedObject()).setEffect(true);
-				frame.repaint();
+				if (!((Effect)gameBoard.getSelectedObject()).getEffect()) {
+					gameBoard.switchEffect((Effect)gameBoard.getSelectedObject());
+					penaltyRadioButton.setSelected(false);
+					rewardRadioButton.setSelected(true);
+					((Effect)gameBoard.getSelectedObject()).setEffect(true);
+					frame.repaint();
+				}
 			}
 		});
 		penaltyRadioButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent c) {
-				gameBoard.switchEffect((Effect)gameBoard.getSelectedObject());
-				penaltyRadioButton.setSelected(true);
-				rewardRadioButton.setSelected(false);
-				((Effect)gameBoard.getSelectedObject()).setEffect(false);
-				frame.repaint();
+				if (((Effect)gameBoard.getSelectedObject()).getEffect()) {
+					gameBoard.switchEffect((Effect)gameBoard.getSelectedObject());
+					penaltyRadioButton.setSelected(true);
+					rewardRadioButton.setSelected(false);
+					((Effect)gameBoard.getSelectedObject()).setEffect(false);
+					frame.repaint();
+				}
 			}
 		});
 		deleteButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent c) {
 				gameBoard.deleteShape(gameBoard.getSelectedObject());
 				deleteButton.setVisible(false);
+				frame.repaint();
+			}
+		});
+
+		costTextField.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("triggered");
+				((Effect)gameBoard.getSelectedObject()).setCost(Integer.parseInt(costTextField.getText()));
+				gameBoard.curr = null;
+				gameBoard.points = new ArrayList<>();
 				frame.repaint();
 			}
 		});
@@ -264,5 +280,9 @@ public class Game implements ActionListener{
 		}
 		gameBoard.setMode(mode);
 		frame.repaint();
+	}
+
+	public static void setCostTextField(int cost) {
+		costTextField.setText(Integer.toString(cost));
 	}
 }

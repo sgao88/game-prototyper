@@ -452,6 +452,9 @@ public class GameBoard extends JPanel implements ActionListener{
                                 points.add(bottomRightCorner);
                                 points.add(bottomLeftCorner);
                                 statusUpdate = "Object Selected";
+                                if (curr instanceof Effect) {
+                                    Game.setCostTextField((((Effect) curr).getCost()));
+                                }
                             }
                         }
                     }
