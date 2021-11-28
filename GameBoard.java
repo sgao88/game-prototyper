@@ -263,9 +263,17 @@ public class GameBoard extends JPanel implements ActionListener{
     public void addEffect(boolean isReward) {
         Rectangle boundingBox = new Rectangle( 640, 238, 50, 50);
         Effect e = new Effect(boundingBox, isReward, 0);
-        e.setColor(Color.yellow);
+        if (isReward){
+            e.setColor(Color.yellow);
+        } else {
+            e.setColor(Color.BLACK);
+        }
         allObjects.add(e);
-        statusUpdate = "New Reward Added";
+        if (isReward) {
+            statusUpdate = "New Reward Added";
+        } else {
+            statusUpdate = "New Penalty Added";
+        }
     }
 
     public void deleteShape(Object shape) {
